@@ -1,4 +1,7 @@
 require('dotenv').config();
+const dns = require('dns');
+dns.setDefaultResultOrder('ipv4first');
+
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
@@ -71,22 +74,20 @@ mongoose.connect(mongoURI || 'mongodb://localhost:27017/shottyshop')
     process.exit(1);
   });
 
-// --- GIẢI PHÁP AN TOÀN: TỰ ĐỘNG KIỂM TRA VÀ NẠP ROUTER TRÁNH LÀM SẬP SERVER ---
+// Tự động kiểm tra và nạp các file router an toàn
 const loadRouterSafely = (apiPath, routerModulePath) => {
   try {
     const routerModule = require(routerModulePath);
-    // Kiểm tra xem module được export ra có phải là một hàm middleware hợp lệ của Express không
     if (typeof routerModule === 'function' || (routerModule && typeof routerModule.use === 'function')) {
       app.use(apiPath, routerModule);
     } else {
-      console.error(`🚨 CẢNH BÁO ROUTER: File "${routerModulePath}" export sai định dạng (Cần xuất module.exports = router). Bỏ qua để tránh sập server.`);
+      console.error(`🚨 CẢNH BÁO ROUTER: File "${routerModulePath}" export sai định dạng (Cần xuất module.exports = router). Bỏ quan để tránh sập server.`);
     }
   } catch (error) {
     console.error(`🚨 LỖI NẠP FILE: Không thể load file "${routerModulePath}". Chi tiết lỗi:`, error.message);
   }
 };
 
-// Thực hiện nạp an toàn từng router một
 loadRouterSafely('/api/users', './routes/users');
 loadRouterSafely('/api/products', './routes/products');
 loadRouterSafely('/api/banners', './routes/banners');
