@@ -36,8 +36,10 @@ router.post('/add', verifyToken, async (req, res) => {
     
     let wishlist = await getOrCreateWishlist(req.user.id);
     const exists = wishlist.items.some(item => item.productId.toString() === productId);
-    if (exists) return res.status(400).json({ error: 'Product already in wishlist' });
-    
+    if (exists) {
+      return res.status(400).json({ error: 'Product already in wishlist' });
+    }
+
     wishlist.items.push({ productId });
     await wishlist.save();
     await wishlist.populate('items.productId');

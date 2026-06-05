@@ -47,6 +47,81 @@ router.get('/', async (req, res) => {
   }
 });
 
+// GET /api/posts/slug/:slug - Lấy chi tiết bài viết theo slug
+router.get('/slug/:slug', async (req, res) => {
+  try {
+    const post = await Post.findOne({ slug: req.params.slug, status: 'published' });
+    if (!post) return res.status(404).json({ error: 'Post not found' });
+    post.views = (post.views || 0) + 1;
+    await post.save();
+    res.json(post);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ==================== STAFF/ADMIN ROUTES ====================\
+
+// GET /api/posts/admin - Quản lý tất cả bài viết
+router.get('/admin', verifyToken, isStaffOrAdmin, async (req, res) => {
+  try {
+    const posts = await Post.find().sort({ createdAt: -1 });
+    res.json(posts);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// POST /api/posts - Tạo bài viết mới
+router.post('/', verifyToken, isStaffOrAdmin, async (req, res) => {
+  try {
+    const { title, content, category, excerpt, image, tags, status } = req.body;
+    if (!title || !content) return res.status(400).json({ error: 'Title and Content are required' });
+    let baseSlug = title.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-');
+    const existingPosts = await Post.find({ slug: new RegExp(`^${baseSlug}`) }, 'slug');
+    const existingSlugs = existingPosts.map(p => p.slug);
+    const slug = generateUniqueSlug(baseSlug, existingSlugs);
+    const postData = { title, content, category, excerpt, image, tags, status, slug, author: req.user.id };
+    if (status === 'published') postData.publishedAt = new Date();
+    const post = new Post(postData);
+    await post.save();
+    if (status === 'published') {
+      const users = await User.find({ role: { $ne: 'admin' } }, '_id');
+      const userIds = users.map(u => u._id);
+      await createBulkNotification(userIds, 'post', `Bài viết mới: ${title}`, (excerpt || content).substring(0, 100), { slug, postId: post._id });
+    }
+    res.status(201).json(post);
+  } catch (error) {
+    console.error('Create post error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// PUT /api/posts/:id - Cập nhật bài viết
+router.put('/:id', verifyToken, isStaffOrAdmin, async (req, res) => {
+  try {
+    const { title, content, category, excerpt, image, tags, status } = req.body;
+    const existingPost = await Post.findById(req.params.id);
+    if (!existingPost) return res.status(404).json({ error: 'Post not found' });
+    const updateData = { title, content, category, excerpt, image, tags, status, updatedAt: Date.now() };
+    let wasPublished = false;
+    if (existingPost.status !== 'published' && status === 'published') {
+      updateData.publishedAt = new Date();
+      wasPublished = true;
+    }
+    const post = await Post.findByIdAndUpdate(req.params.id, updateData, { new: true });
+    if (wasPublished) {
+      const users = await User.find({ role: { $ne: 'admin' } }, '_id');
+      const userIds = users.map(u => u._id);
+      await createBulkNotification(userIds, 'post', `Bài viết mới: ${post.title}`, (post.excerpt || post.content).substring(0, 100), { slug: post.slug, postId: post._id });
+    }
+    res.json(post);
+  } catch (error) {
+    console.error('Update post error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // DELETE /api/posts/:id - Xóa bài viết
 router.delete('/:id', verifyToken, isStaffOrAdmin, async (req, res) => {
   try {
