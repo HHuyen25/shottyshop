@@ -9,25 +9,11 @@ const compression = require('compression');
 const path = require('path');
 const fs = require('fs');
 
-// Import routes
-const userRoutes = require('./routes/users');
-const productRoutes = require('./routes/products');
-const bannerRoutes = require('./routes/banners');
-const orderRoutes = require('./routes/orders');
-const couponRoutes = require('./routes/coupons');
-const cartRoutes = require('./routes/carts');
-const reviewRoutes = require('./routes/reviews');
-const authRoutes = require('./routes/auth');
-const uploadRoutes = require('./routes/upload');
-const wishlistRoutes = require('./routes/wishlist');
-const postRoutes = require('./routes/post');
-const notificationRoutes = require('./routes/notifications');
-
 const app = express();
 const PORT = process.env.PORT || 3000;
 const isProduction = process.env.NODE_ENV === 'production';
 
-// Middleware
+// Middleware cơ bản
 app.use(compression());
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
@@ -48,7 +34,7 @@ if (isProduction) {
   app.use(morgan('dev'));
 }
 
-// CORS configuration
+// Cấu hình CORS
 const allowedOrigins = ['http://localhost:5500', 'http://127.0.0.1:5500', 'http://localhost:3000', 'https://shottyshop.onrender.com'];
 app.use(cors({
   origin: function (origin, callback) {
@@ -63,7 +49,7 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin']
 }));
 
-// Rate limiting
+// Giới hạn lượt yêu cầu (Rate limiting)
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 1000,
@@ -71,7 +57,7 @@ const apiLimiter = rateLimit({
 });
 app.use('/api/', apiLimiter);
 
-// Database connection
+// Kết nối Cơ sở dữ liệu
 const mongoURI = process.env.MONGODB_URI;
 if (!mongoURI && isProduction) {
   console.error('CRITICAL ERROR: MONGODB_URI environment variable is not defined!');
@@ -85,30 +71,43 @@ mongoose.connect(mongoURI || 'mongodb://localhost:27017/shottyshop')
     process.exit(1);
   });
 
-// API Routes
-app.use('/api/users', userRoutes);
-app.use('/api/products', productRoutes);
-app.use('/api/banners', bannerRoutes);
-app.use('/api/orders', orderRoutes);
-app.use('/api/coupons', couponRoutes);
-app.use('/api/carts', cartRoutes);
-app.use('/api/reviews', reviewRoutes);
-app.use('/api/auth', authRoutes);
-app.use('/api/upload', uploadRoutes);
-app.use('/api/wishlist', wishlistRoutes);
-app.use('/api/posts', postRoutes);
-app.use('/api/notifications', notificationRoutes);
+// --- GIẢI PHÁP AN TOÀN: TỰ ĐỘNG KIỂM TRA VÀ NẠP ROUTER TRÁNH LÀM SẬP SERVER ---
+const loadRouterSafely = (apiPath, routerModulePath) => {
+  try {
+    const routerModule = require(routerModulePath);
+    // Kiểm tra xem module được export ra có phải là một hàm middleware hợp lệ của Express không
+    if (typeof routerModule === 'function' || (routerModule && typeof routerModule.use === 'function')) {
+      app.use(apiPath, routerModule);
+    } else {
+      console.error(`🚨 CẢNH BÁO ROUTER: File "${routerModulePath}" export sai định dạng (Cần xuất module.exports = router). Bỏ qua để tránh sập server.`);
+    }
+  } catch (error) {
+    console.error(`🚨 LỖI NẠP FILE: Không thể load file "${routerModulePath}". Chi tiết lỗi:`, error.message);
+  }
+};
 
-// --- ĐÃ SỬA ĐƯỜNG DẪN STATIC FILE & FRONTEND ĐỂ NHẢY RA KHỎI THƯ MỤC BACKEND ---
+// Thực hiện nạp an toàn từng router một
+loadRouterSafely('/api/users', './routes/users');
+loadRouterSafely('/api/products', './routes/products');
+loadRouterSafely('/api/banners', './routes/banners');
+loadRouterSafely('/api/orders', './routes/orders');
+loadRouterSafely('/api/coupons', './routes/coupons');
+loadRouterSafely('/api/carts', './routes/carts');
+loadRouterSafely('/api/reviews', './routes/reviews');
+loadRouterSafely('/api/categories', './routes/categories');
+loadRouterSafely('/api/auth', './routes/auth');
+loadRouterSafely('/api/upload', './routes/upload');
+loadRouterSafely('/api/wishlist', './routes/wishlist');
+loadRouterSafely('/api/posts', './routes/post');
+loadRouterSafely('/api/notifications', './routes/notifications');
 
-// Static Files folder (Đường dẫn cũ: path.join(__dirname, 'image') -> Đã sửa thành nhảy ra ngoài để tìm thư mục gốc)
+// --- XỬ LÝ ĐƯỜNG DẪN STATIC FILE & FRONTEND ---
 const uploadsPath = path.join(__dirname, '..', 'image');
 if (!fs.existsSync(uploadsPath)) {
   fs.mkdirSync(uploadsPath, { recursive: true });
 }
 app.use('/image', express.static(uploadsPath));
 
-// Frontend static files (Đường dẫn cũ: path.join(__dirname, 'frontend') -> Đã sửa thành tìm đúng thư mục frontend)
 const frontendPath = path.join(__dirname, '..', 'frontend');
 app.use(express.static(frontendPath, {
   maxAge: isProduction ? '1d' : 0,
@@ -126,7 +125,7 @@ app.get('*', (req, res) => {
   else res.status(404).send('Page not found'); 
 });
 
-// Error handlers
+// Điều hướng lỗi
 app.use((req, res) => { 
   if (req.path.startsWith('/api/')) res.status(404).json({ error: 'API endpoint not found' }); 
   else res.status(404).sendFile(path.join(frontendPath, '404.html'), err => { if (err) res.status(404).send('Page not found'); }); 
@@ -134,7 +133,6 @@ app.use((req, res) => {
 
 app.use((err, req, res, next) => { 
   console.error('Server error:', err.message); 
-  console.error(err.stack); 
   if (err.code === 'LIMIT_FILE_SIZE') return res.status(400).json({ error: 'File too large. Max size: 50MB' }); 
   if (err.name === 'ValidationError') return res.status(400).json({ error: err.message }); 
   if (err.name === 'JsonWebTokenError') return res.status(401).json({ error: 'Invalid token' }); 
