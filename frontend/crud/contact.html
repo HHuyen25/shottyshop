@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title data-key="contact_title">Contact Us - SHOTTYSHOP</title>
+  <link rel="stylesheet" href="/style.css">
+  <style>
+    .contact-container { max-width: 1200px; margin: 2rem auto; padding: 0 1rem; display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; }
+    .contact-info, .contact-form { background: var(--bg-card, white); border-radius: 16px; padding: 2rem; box-shadow: 0 2px 8px var(--shadow, rgba(0,0,0,0.05)); border: 1px solid var(--border-color, #eee); }
+    .contact-info h2, .contact-form h2 { margin-bottom: 1.5rem; color: var(--text-primary, #1a1a1a); }
+    .info-item { display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem; padding: 1rem; background: var(--bg-body, #f8f9fa); border-radius: 12px; transition: transform 0.2s; }
+    .info-item:hover { transform: translateX(5px); }
+    .info-icon { font-size: 2rem; }
+    .info-text strong { display: block; margin-bottom: 0.25rem; color: var(--text-primary, #1a1a1a); }
+    .info-text p { color: var(--text-secondary, #666); font-size: 0.85rem; }
+    .social-links { display: flex; gap: 1rem; margin-top: 2rem; flex-wrap: wrap; }
+    .social-link { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; background: #1a1a1a; color: white; text-decoration: none; border-radius: 40px; transition: all 0.2s; font-size: 0.85rem; }
+    .social-link:hover { background: #333; transform: translateY(-2px); }
+    .form-group { margin-bottom: 1rem; }
+    .form-group label { display: block; margin-bottom: 0.5rem; font-weight: 500; color: var(--text-primary, #1a1a1a); }
+    .form-input, .form-textarea { width: 100%; padding: 12px; border: 1px solid var(--border-color, #ddd); border-radius: 12px; background: var(--bg-card, white); color: var(--text-primary, #1a1a1a); transition: all 0.2s; }
+    .form-input:focus, .form-textarea:focus { outline: none; border-color: #1a1a1a; box-shadow: 0 0 0 3px rgba(26,26,26,0.1); }
+    .form-textarea { resize: vertical; min-height: 100px; }
+    .btn-submit { background: #1a1a1a; color: white; border: none; padding: 12px 24px; border-radius: 12px; cursor: pointer; font-weight: 600; width: 100%; transition: all 0.2s; }
+    .btn-submit:hover { background: #333; transform: translateY(-2px); }
+    .btn-submit:disabled { background: #ccc; cursor: not-allowed; transform: none; }
+    .map-container { grid-column: 1 / -1; border-radius: 16px; overflow: hidden; margin-top: 1rem; }
+    .success-message { background: #d1fae5; color: #059669; padding: 1rem; border-radius: 12px; margin-bottom: 1rem; display: none; }
+    .error-message { background: #fee2e2; color: #dc2626; padding: 1rem; border-radius: 12px; margin-bottom: 1rem; display: none; }
+    @media (max-width: 768px) { .contact-container { grid-template-columns: 1fr; } }
+    body.dark-mode .info-item { background: #2a2a2a; }
+    body.dark-mode .social-link { background: #333; }
+    body.dark-mode .social-link:hover { background: #444; }
+  </style>
+</head>
+<body>
+  <div id="header-placeholder"></div>
+  <div class="contact-container">
+    <div class="contact-info">
+      <h2 data-key="contact_info">Contact Information</h2>
+      <div class="info-item"><div class="info-icon"></div><div class="info-text"><strong data-key="address">Address</strong><p>123 Nguyen Hue Street, Ben Nghe Ward, District 1, Ho Chi Minh City, Vietnam</p></div></div>
+      <div class="info-item"><div class="info-icon"></div><div class="info-text"><strong data-key="email">Email</strong><p>support@shottyshop.com</p><p>business@shottyshop.com</p></div></div>
+      <div class="info-item"><div class="info-icon"></div><div class="info-text"><strong data-key="phone">Phone</strong><p>(+84) 28 1234 5678</p><p>Hotline: 1900 1234 (8:00 - 21:00)</p></div></div>
+      <div class="info-item"><div class="info-icon"></div><div class="info-text"><strong data-key="business_hours">Business Hours</strong><p>Monday - Friday: 8:00 - 21:00</p><p>Saturday - Sunday: 9:00 - 18:00</p></div></div>
+      <div class="social-links"><a href="#" class="social-link">Facebook</a><a href="#" class="social-link">Instagram</a><a href="#" class="social-link">Twitter</a><a href="#" class="social-link">YouTube</a><a href="#" class="social-link">Discord</a></div>
+    </div>
+    <div class="contact-form">
+      <h2 data-key="send_message">Send us a message</h2>
+      <div id="successMsg" class="success-message" data-key="message_sent_success">Message sent successfully! We'll respond within 24 hours.</div>
+      <div id="errorMsg" class="error-message" data-key="message_failed">Failed to send message. Please try again.</div>
+      <form id="contactForm">
+        <div class="form-group"><label data-key="your_name">Your Name *</label><input type="text" id="contactName" class="form-input" data-placeholder-key="your_name" required></div>
+        <div class="form-group"><label data-key="email">Email *</label><input type="email" id="contactEmail" class="form-input" data-placeholder-key="email" required></div>
+        <div class="form-group"><label data-key="subject">Subject *</label><input type="text" id="contactSubject" class="form-input" data-placeholder-key="subject" required></div>
+        <div class="form-group"><label data-key="message">Message *</label><textarea id="contactMessage" rows="5" class="form-textarea" data-placeholder-key="message" required></textarea></div>
+        <button type="submit" class="btn-submit" id="submitBtn" data-key="send_message">Send Message </button>
+      </form>
+    </div>
+    <div class="map-container"><iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3919.4248256474987!2d106.7031113!3d10.775399!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x31752f3f2e8b5f6f%3A0x5e6f5c5b9c5e5f5f!2zVHLhuqduIELDoWNoIEPDtG5nIFThuqVjIFRow6BuaCBQaOG7kSBI4buTIENow60gTWluaA!5e0!3m2!1svi!2s!4v1700000000000!5m2!1svi!2s" width="100%" height="300" style="border:0; border-radius: 16px;" allowfullscreen="" loading="lazy"></iframe></div>
+  </div>
+  <script src="/js/common.js"></script>
+  <script>
+    const form = document.getElementById('contactForm');
+    const submitBtn = document.getElementById('submitBtn');
+    const successMsg = document.getElementById('successMsg');
+    const errorMsg = document.getElementById('errorMsg');
+    if (currentUser) { document.getElementById('contactName').value = currentUser.name || ''; document.getElementById('contactEmail').value = currentUser.email || ''; }
+    async function sendMessage(e) { e.preventDefault(); const name = document.getElementById('contactName').value.trim(); const email = document.getElementById('contactEmail').value.trim(); const subject = document.getElementById('contactSubject').value.trim(); const message = document.getElementById('contactMessage').value.trim(); if (!name || !email || !subject || !message) { errorMsg.style.display = 'block'; setTimeout(() => errorMsg.style.display = 'none', 3000); return; } if (!email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) { errorMsg.textContent = translations[currentLanguage]?.valid_email || 'Please enter a valid email address'; errorMsg.style.display = 'block'; setTimeout(() => errorMsg.style.display = 'none', 3000); return; } submitBtn.disabled = true; submitBtn.textContent = translations[currentLanguage]?.sending || 'Sending...'; await new Promise(resolve => setTimeout(resolve, 1000)); const messages = JSON.parse(localStorage.getItem('contactMessages') || '[]'); messages.push({ name, email, subject, message, date: new Date().toISOString() }); localStorage.setItem('contactMessages', JSON.stringify(messages)); successMsg.style.display = 'block'; setTimeout(() => successMsg.style.display = 'none', 3000); form.reset(); if (currentUser) { document.getElementById('contactName').value = currentUser.name || ''; document.getElementById('contactEmail').value = currentUser.email || ''; } submitBtn.disabled = false; submitBtn.textContent = translations[currentLanguage]?.send_message || 'Send Message '; if (window.toast) toast.success(translations[currentLanguage]?.message_sent || 'Message sent successfully!'); }
+    form.addEventListener('submit', sendMessage);
+  </script>
+</body>
+</html>

@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title data-key="wishlist_title">Wishlist - SHOTTYSHOP</title>
+  <link rel="stylesheet" href="/style.css">
+  <style>
+    .wishlist-container { max-width: 1200px; margin: 2rem auto; padding: 0 1rem; }
+    .wishlist-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem; }
+    .wishlist-count { background: #1a1a1a; color: white; padding: 0.2rem 0.6rem; border-radius: 20px; font-size: 0.8rem; }
+    .clear-wishlist-btn { background: #f0f0f0; border: none; padding: 0.5rem 1rem; border-radius: 8px; cursor: pointer; transition: all 0.2s; }
+    .clear-wishlist-btn:hover { background: #dc2626; color: white; }
+    .wishlist-item { display: grid; grid-template-columns: 120px 1fr auto; gap: 1.5rem; background: white; border-radius: 16px; padding: 1rem; box-shadow: 0 2px 8px rgba(0,0,0,0.05); align-items: center; transition: all 0.2s; }
+    .wishlist-item:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,0.1); }
+    .wishlist-item-image img { width: 100%; height: 120px; object-fit: cover; border-radius: 12px; }
+    .wishlist-item-name { font-size: 1rem; font-weight: 600; margin-bottom: 0.5rem; }
+    .wishlist-item-category { font-size: 0.7rem; color: #999; margin-bottom: 0.5rem; }
+    .wishlist-item-price { font-size: 1.2rem; font-weight: 700; margin-bottom: 0.5rem; }
+    .wishlist-item-stock { font-size: 0.7rem; font-weight: 500; }
+    .in-stock { color: #10b981; }
+    .out-of-stock { color: #ef4444; }
+    .wishlist-item-actions { display: flex; flex-direction: column; gap: 0.5rem; min-width: 140px; }
+    .btn-add-to-cart { background: #1a1a1a; color: white; border: none; padding: 0.5rem 1rem; border-radius: 8px; cursor: pointer; transition: all 0.2s; }
+    .btn-add-to-cart:hover { background: #333; transform: translateY(-2px); }
+    .btn-remove-wishlist { background: #f0f0f0; border: none; padding: 0.5rem 1rem; border-radius: 8px; cursor: pointer; transition: all 0.2s; }
+    .btn-remove-wishlist:hover { background: #dc2626; color: white; }
+    .empty-wishlist { text-align: center; padding: 4rem; background: white; border-radius: 16px; }
+    .empty-wishlist h3 { margin-bottom: 1rem; }
+    @media (max-width: 768px) {
+      .wishlist-item { grid-template-columns: 100px 1fr; }
+      .wishlist-item-actions { grid-column: 1 / -1; flex-direction: row; }
+      .btn-add-to-cart, .btn-remove-wishlist { flex: 1; }
+    }
+    body.dark-mode .wishlist-item, body.dark-mode .empty-wishlist { background: #1e1e1e; }
+    body.dark-mode .btn-remove-wishlist { background: #333; color: #e0e0e0; }
+  </style>
+</head>
+<body>
+  <div id="header-placeholder"></div>
+  <div class="wishlist-container">
+    <div class="wishlist-header">
+      <h1 data-key="wishlist">❤️ My Wishlist <span id="wishlistCount" class="wishlist-count">0</span></h1>
+      <button id="clearWishlistBtn" class="clear-wishlist-btn" data-key="clear_all">Clear All</button>
+    </div>
+    <div id="emptyWishlist" class="empty-wishlist" style="display: none;">
+      <div style="font-size: 4rem; margin-bottom: 1rem;"></div>
+      <h3 data-key="your_wishlist_empty">Your wishlist is empty</h3>
+      <p data-key="save_favorite">Save your favorite items here to buy them later</p>
+      <a href="http://localhost:3000/" class="btn-primary" style="display: inline-block; margin-top: 1rem;" data-key="start_shopping">Continue Shopping →</a>
+    </div>
+    <div id="wishlistItems" class="wishlist-items" style="display: flex; flex-direction: column; gap: 1rem;"></div>
+  </div>
+
+  <script src="/js/common.js"></script>
+  <script>
+    const wishlistAPI = {
+      async get() {
+        const res = await fetch(`${API_URL}/wishlist`, {
+          headers: { 'Authorization': `Bearer ${authToken}` }
+        });
+        if (res.status === 401) { logout(); throw new Error('Unauthorized'); }
+        if (!res.ok) throw new Error('Failed to get wishlist');
+        return res.json();
+      },
+      async add(productId) {
+        const res = await fetch(`${API_URL}/wishlist/add`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
+          body: JSON.stringify({ productId })
+        });
+        if (!res.ok) { const err = await res.json(); throw new Error(err.error); }
+        return res.json();
+      },
+      async remove(productId) {
+        const res = await fetch(`${API_URL}/wishlist/remove/${productId}`, {
+          method: 'DELETE',
+          headers: { 'Authorization': `Bearer ${authToken}` }
+        });
+        if (!res.ok) throw new Error('Failed to remove');
+        return res.json();
+      },
+      async clear() {
+        const res = await fetch(`${API_URL}/wishlist/clear`, {
+          method: 'DELETE',
+          headers: { 'Authorization': `Bearer ${authToken}` }
+        });
+        return res.json();
+      }
+    };
+
+    async function loadWishlist() {
+      const authenticated = await ensureAuthenticated(true);
+      if (!authenticated) return;
+      try {
+        showLoading();
+        const wishlist = await wishlistAPI.get();
+        renderWishlist(wishlist.items);
+        document.getElementById('wishlistCount').textContent = wishlist.items.length;
+        hideLoading();
+      } catch(e) {
+        console.error(e);
+        hideLoading();
+        if (e.message !== 'Unauthorized') {
+          if (window.toast) toast.error(translations[currentLanguage]?.error || 'Failed to load wishlist');
+          document.getElementById('wishlistItems').innerHTML = '<div class="empty-wishlist">Failed to load wishlist. Please try again later.</div>';
+        }
+      }
+    }
+
+    function renderWishlist(items) {
+      const container = document.getElementById('wishlistItems');
+      const emptyDiv = document.getElementById('emptyWishlist');
+      if (!items || items.length === 0) {
+        container.style.display = 'none';
+        emptyDiv.style.display = 'block';
+        return;
+      }
+      container.style.display = 'flex';
+      emptyDiv.style.display = 'none';
+      let html = '';
+      for (const item of items) {
+        const p = item.productId;
+        if (!p) continue;
+        const imgUrl = getImageUrl(p.image) || 'https://picsum.photos/200/200';
+        const stockStatus = p.stock > 0 ? `<span class="in-stock" data-key="in_stock">✓ In Stock (${p.stock})</span>` : `<span class="out-of-stock" data-key="out_of_stock">✗ Out of Stock</span>`;
+        html += `
+          <div class="wishlist-item" data-id="${p._id}">
+            <div class="wishlist-item-image"><img src="${imgUrl}" onerror="this.src='https://picsum.photos/200/200'"></div>
+            <div class="wishlist-item-info">
+              <div class="wishlist-item-name">${escapeHtml(p.name)}</div>
+              <div class="wishlist-item-category">${escapeHtml(p.category)}</div>
+              <div class="wishlist-item-price">${convertPrice(p.price)}</div>
+              <div class="wishlist-item-stock ${p.stock > 0 ? 'in-stock' : 'out-of-stock'}">${stockStatus}</div>
+            </div>
+            <div class="wishlist-item-actions">
+              <button class="btn-add-to-cart" data-id="${p._id}" data-name="${escapeHtml(p.name)}" data-price="${p.price}" data-image="${imgUrl}" data-key="add_to_cart">🛒 ADD TO CART</button>
+              <button class="btn-remove-wishlist" data-id="${p._id}" data-key="remove">Remove</button>
+            </div>
+          </div>
+        `;
+      }
+      container.innerHTML = html;
+
+      document.querySelectorAll('.btn-add-to-cart').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+          e.stopPropagation();
+          const productId = btn.dataset.id, productName = btn.dataset.name, productPrice = parseFloat(btn.dataset.price), productImage = btn.dataset.image;
+          try {
+            const res = await fetch(`${API_URL}/products/${productId}`);
+            if (res.ok) {
+              const product = await res.json();
+              const stock = product.stock || 0;
+              if (stock <= 0) {
+                if (window.toast) toast.error(`${productName} ${translations[currentLanguage]?.out_of_stock || 'is out of stock!'}`);
+                return;
+              }
+              let cart = JSON.parse(localStorage.getItem('shotyCart')) || [];
+              let existing = cart.find(i => i.id === productId);
+              if (existing) {
+                if (existing.quantity + 1 > stock) {
+                  if (window.toast) toast.warning(`${translations[currentLanguage]?.only || 'Only'} ${stock} ${translations[currentLanguage]?.left || 'left in stock!'}`);
+                  return;
+                }
+                existing.quantity++;
+              } else {
+                if (1 > stock) {
+                  if (window.toast) toast.warning(`${productName} ${translations[currentLanguage]?.out_of_stock || 'is out of stock!'}`);
+                  return;
+                }
+                cart.push({ id: productId, name: productName, price: productPrice, quantity: 1, image: productImage });
+              }
+              localStorage.setItem('shotyCart', JSON.stringify(cart));
+              updateCartCount();
+              if (window.toast) toast.success(`${translations[currentLanguage]?.added || 'Added'} "${productName}" ${translations[currentLanguage]?.to_cart || 'to cart!'}`);
+            } else { if (window.toast) toast.error(translations[currentLanguage]?.error || 'Cannot check stock'); }
+          } catch(e) { if (window.toast) toast.error(translations[currentLanguage]?.error || 'Error adding to cart'); }
+        });
+      });
+
+      document.querySelectorAll('.btn-remove-wishlist').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+          e.stopPropagation();
+          try {
+            await wishlistAPI.remove(btn.dataset.id);
+            const itemDiv = document.querySelector(`.wishlist-item[data-id="${btn.dataset.id}"]`);
+            if (itemDiv) itemDiv.remove();
+            const remaining = document.querySelectorAll('.wishlist-item').length;
+            document.getElementById('wishlistCount').textContent = remaining;
+            if (remaining === 0) {
+              document.getElementById('wishlistItems').style.display = 'none';
+              document.getElementById('emptyWishlist').style.display = 'block';
+            }
+            if (window.toast) toast.success(translations[currentLanguage]?.remove_from_wishlist || 'Removed from wishlist');
+          } catch(e) { if (window.toast) toast.error(translations[currentLanguage]?.error || 'Failed to remove'); }
+        });
+      });
+    }
+
+    document.getElementById('clearWishlistBtn')?.addEventListener('click', async () => {
+      if (confirm(translations[currentLanguage]?.clear_all_confirm || 'Clear entire wishlist? This action cannot be undone.')) {
+        try {
+          await wishlistAPI.clear();
+          await loadWishlist();
+          if (window.toast) toast.success(translations[currentLanguage]?.clear_all || 'Wishlist cleared');
+        } catch(e) { if (window.toast) toast.error(translations[currentLanguage]?.error || 'Failed to clear wishlist'); }
+      }
+    });
+
+    window.onCurrencyChange = () => { loadWishlist(); };
+    window.onLanguageChange = () => { loadWishlist(); };
+    window.initPage = async () => { if (!(await (window.requireLogin ? window.requireLogin() : Promise.resolve(true)))) return; await loadWishlist(); };
+  </script>
+</body>
+</html>

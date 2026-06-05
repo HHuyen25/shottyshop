@@ -1,0 +1,23 @@
+# Dependencies
+node_modules/
+**/node_modules/
+
+# Biến môi trường & bí mật (KHÔNG bao giờ commit)
+.env
+**/.env
+*.env
+!.env.example
+
+# Logs
+*.log
+npm-debug.log*
+
+# Hệ điều hành / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Tạm thời
+tmp/
+temp/

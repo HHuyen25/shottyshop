@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title data-key="about_title">About Us - SHOTTYSHOP</title>
+  <link rel="stylesheet" href="/style.css">
+  <style>
+    .about-container { max-width: 1000px; margin: 2rem auto; padding: 0 1rem; }
+    .hero-section { background: #0a0a0a; color: white; text-align: center; padding: 4rem 2rem; border-radius: 24px; margin-bottom: 2rem; }
+    .hero-section h1 { font-size: 2.5rem; margin-bottom: 1rem; }
+    .hero-section p { font-size: 1.1rem; opacity: 0.9; }
+    .section { background: var(--bg-card, white); border-radius: 16px; padding: 2rem; margin-bottom: 2rem; box-shadow: 0 2px 8px var(--shadow, rgba(0,0,0,0.05)); border: 1px solid var(--border-color, #eee); }
+    .section h2 { margin-bottom: 1rem; color: var(--text-primary, #0a0a0a); }
+    .values-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-top: 1.5rem; }
+    .value-card { text-align: center; padding: 1.5rem; background: var(--bg-body, #f8f9fa); border-radius: 16px; border: 1px solid var(--border-color, #eee); }
+    .value-icon { font-size: 3rem; margin-bottom: 0.5rem; }
+    .value-card h3 { margin-bottom: 0.5rem; color: var(--text-primary, #0a0a0a); }
+    .value-card p { font-size: 0.85rem; color: var(--text-secondary, #666); }
+    .team-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 2rem; margin-top: 1.5rem; }
+    .team-member { text-align: center; }
+    .team-member img { width: 150px; height: 150px; border-radius: 50%; object-fit: cover; margin-bottom: 1rem; border: 3px solid var(--border-color, #e5e5e5); }
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1.5rem; text-align: center; }
+    .stat-number { font-size: 2rem; font-weight: 700; color: #0a0a0a; }
+    .partner-badge { display: inline-block; background: var(--bg-body, #f0f0f0); padding: 0.3rem 0.8rem; border-radius: 20px; margin: 0.25rem; font-size: 0.8rem; color: var(--text-primary, #333); }
+    @media (max-width: 768px) { .hero-section h1 { font-size: 1.8rem; } }
+    body.dark-mode .value-card { background: #1e1e1e; }
+  </style>
+</head>
+<body>
+  <div id="header-placeholder"></div>
+  <div class="about-container">
+    <div class="hero-section"><h1 data-key="brand_name">SHOTTYSHOP</h1><p data-key="brand_slogan">Your Premier Destination for K-POP Merchandise & Albums</p></div>
+    <div class="section"><h2 data-key="our_story">Our Story</h2><p data-key="story_text">Founded in 2020, SHOTTYSHOP started as a small passion project by a group of K-POP fans who wanted to bring authentic Korean merchandise to Vietnam. Today, we have grown into one of Southeast Asia's most trusted K-POP retail platforms, serving thousands of fans across the region.</p><p style="margin-top: 1rem;" data-key="story_text2">We work directly with official distributors in Korea to ensure 100% authentic products, including albums that count towards HANTEO and GAON charts. Every album purchased from SHOTTYSHOP helps support your favorite artists directly.</p></div>
+    <div class="section"><h2 data-key="our_values">Our Values</h2><div class="values-grid"><div class="value-card"><div class="value-icon"></div><h3 data-key="authenticity">Authenticity</h3><p data-key="authenticity_desc">100% genuine products from official sources</p></div><div class="value-card"><div class="value-icon"></div><h3 data-key="fast_shipping">Fast Shipping</h3><p data-key="fast_shipping_desc">Express delivery from Korea to your door</p></div><div class="value-card"><div class="value-icon">❤️</div><h3 data-key="fan_first">Fan First</h3><p data-key="fan_first_desc">Built by fans, for fans</p></div><div class="value-card"><div class="value-icon"></div><h3 data-key="global_community">Global Community</h3><p data-key="global_community_desc">Serving K-POP fans worldwide</p></div></div></div>
+    <div class="section"><h2 data-key="by_numbers">SHOTTYSHOP by Numbers</h2><div class="stats-grid"><div><div class="stat-number">50,000+</div><div class="stat-label" data-key="happy_customers">Happy Customers</div></div><div><div class="stat-number">200,000+</div><div class="stat-label" data-key="albums_sold">Albums Sold</div></div><div><div class="stat-number">100+</div><div class="stat-label" data-key="artist_collabs">Artist Collaborations</div></div><div><div class="stat-number">24/7</div><div class="stat-label" data-key="customer_support">Customer Support</div></div></div></div>
+    <div class="section"><h2 data-key="meet_team">Meet the Team</h2><div class="team-grid"><div class="team-member"><img src="https://randomuser.me/api/portraits/men/32.jpg" alt="CEO"><h3>Nguyen Van A</h3><p>CEO & Founder</p></div><div class="team-member"><img src="https://randomuser.me/api/portraits/women/68.jpg" alt="Marketing"><h3>Tran Thi B</h3><p>Head of Marketing</p></div><div class="team-member"><img src="https://randomuser.me/api/portraits/men/45.jpg" alt="Operations"><h3>Le Van C</h3><p>Operations Manager</p></div></div></div>
+    <div class="section"><h2 data-key="certifications">Certifications & Partners</h2><p data-key="partner_text">SHOTTYSHOP is proud to be an official partner of HANTEO Chart, GAON Chart, and several major Korean entertainment agencies.</p><div style="margin-top: 1rem; flex-wrap: wrap;"><span class="partner-badge">HANTEO Official</span><span class="partner-badge">GAON Certified</span><span class="partner-badge">HYBE Partner</span><span class="partner-badge">SM Official</span><span class="partner-badge">JYP Partner</span><span class="partner-badge">YG Partner</span></div></div>
+  </div>
+  <script src="/js/common.js"></script>
+</body>
+</html>

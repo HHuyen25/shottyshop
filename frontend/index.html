@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title data-key="home_title">SHOTTYSHOP - LNGSHOT Official Store</title>
+  <link rel="stylesheet" href="/style.css">
+  <style>
+    /* Section nổi bật + theo thành viên — kiểu Weverse Shop */
+    .home-sections { max-width: 1280px; margin: 1.5rem auto 0; padding: 0 1.5rem; }
+    .ws-section { background: #fff; border-radius: 16px; box-shadow: 0 6px 28px rgba(0,0,0,0.07); border: 1px solid var(--border-color, #eee); overflow: hidden; margin-bottom: 2rem; }
+    .ws-banner { position: relative; padding: 1.4rem 2rem 2.6rem; background: linear-gradient(100deg, #d2d2d2 0%, #8c8c8c 48%, #c0c0c0 100%); }
+    .ws-now { display: inline-block; background: rgba(255,255,255,0.88); color: #333; font-size: .7rem; font-weight: 700; padding: 3px 10px; border-radius: 6px; margin-bottom: .55rem; }
+    .ws-title { font-size: 1.85rem; font-weight: 800; color: #fff; letter-spacing: -.02em; text-shadow: 0 1px 4px rgba(0,0,0,.18); }
+    .ws-body { padding: 1.5rem 2rem 0.5rem; margin-top: -1.4rem; background: #fff; border-radius: 16px 16px 0 0; position: relative; }
+    .ws-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.5rem; }
+    .ws-card { cursor: pointer; }
+    .ws-img { position: relative; aspect-ratio: 1/1; background: #f5f5f5; border-radius: 12px; overflow: hidden; }
+    .ws-img img { width: 100%; height: 100%; object-fit: cover; transition: transform .3s; }
+    .ws-card:hover .ws-img img { transform: scale(1.04); }
+    .ws-wish { position: absolute; top: 10px; right: 10px; font-size: 1rem; cursor: pointer; background: rgba(255,255,255,.75); width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+    .ws-name { margin-top: .8rem; font-size: .9rem; font-weight: 500; color: #1a1a1a; line-height: 1.35; display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-height: 2.45em; }
+    .ws-price { margin-top: .35rem; font-size: 1.05rem; font-weight: 800; color: #0a0a0a; }
+    .ws-price .cur { font-size: .68rem; font-weight: 600; color: #9aa0a6; margin-right: 3px; }
+    .ws-tags { display: flex; flex-wrap: wrap; gap: .4rem; margin-top: .6rem; }
+    .ws-tag { font-size: .62rem; font-weight: 700; padding: 2px 7px; border-radius: 5px; border: 1px solid; letter-spacing: .3px; }
+    .tag-exclusive { color: #06b6d4; border-color: #06b6d4; }
+    .tag-preorder { color: #7c4dff; border-color: #7c4dff; }
+    .tag-ship { color: #8a8a8a; border-color: #e2e2e2; font-weight: 500; }
+    .ws-pager { display: flex; align-items: center; justify-content: center; gap: 1.25rem; padding: 1.5rem 0 1rem; }
+    .ws-pager button { width: 44px; height: 44px; border-radius: 50%; border: 1px solid #ddd; background: #fff; cursor: pointer; font-size: 1.1rem; color: #333; transition: background .15s, color .15s, border-color .15s; }
+    .ws-pager button:hover:not(:disabled) { background: #0a0a0a; color: #fff; border-color: #0a0a0a; }
+    .ws-pager button:disabled { opacity: .35; cursor: default; }
+    .ws-pageinfo { font-size: .95rem; color: #9aa0a6; letter-spacing: 1px; }
+    .ws-pageinfo b { color: #0a0a0a; }
+    @media (max-width: 900px) { .ws-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 520px) { .ws-grid { grid-template-columns: 1fr; } .ws-banner { padding: 1.25rem; } .ws-body { padding: 1.25rem; } .ws-title { font-size: 1.4rem; } .home-sections { padding: 0 1rem; } }
+    /* Mạng xã hội ở chân trang */
+    .footer-socials { display: flex; gap: .6rem; margin-top: .4rem; }
+    .footer-socials a { width: 38px; height: 38px; border-radius: 50%; border: 1px solid var(--border-color, #d4d4d4); display: inline-flex; align-items: center; justify-content: center; color: var(--text-primary, #1a1a1a); transition: background .15s, color .15s, border-color .15s, transform .15s; }
+    .footer-socials a:hover { background: #0a0a0a; color: #fff; border-color: #0a0a0a; transform: translateY(-2px); }
+  </style>
+  <script src="https://accounts.google.com/gsi/client" defer></script>
+</head>
+<body>
+  <div id="header-placeholder"></div>
+  <div class="slider-container" id="mainSlider">
+    <div class="slider" id="slider"></div>
+    <button class="slider-btn prev" id="prevBtn" data-key="prev">❮</button>
+    <button class="slider-btn next" id="nextBtn" data-key="next">❯</button>
+    <div class="slider-dots" id="sliderDots"></div>
+  </div>
+  <section id="homeSections" class="home-sections" style="display:none;"></section>
+  <nav class="category-nav" id="categoryNav">
+    <div class="category-nav-container">
+      <button class="category-btn active" id="catAllBtn" data-category="all" data-key="all" style="display:none;">ALL</button>
+      <button class="category-btn" data-category="Album" data-key="album">ALBUM</button>
+      <button class="category-btn" data-category="Card" data-key="card">CARD</button>
+      <button class="category-btn" data-category="Áo" data-key="clothing">CLOTHING</button>
+      <button class="category-btn" data-category="Sản phẩm liên quan" data-key="merch">MERCH</button>
+    </div>
+  </nav>
+  <div class="container"><div id="productList" class="product-grid"></div></div>
+  <!-- Login Modal -->
+  <div id="loginModal" class="modal"><div class="modal-content login-modal"><div class="modal-header"><h3 data-key="login_title">Login to SHOTTYSHOP</h3><span class="close" id="closeLoginModal">&times;</span></div><div class="modal-body"><div class="form-group"><input type="email" id="loginEmail" placeholder="Email" class="form-input" data-placeholder-key="email"></div><div class="form-group"><input type="password" id="loginPassword" placeholder="Password" class="form-input" data-placeholder-key="password"></div><button id="doLoginBtn" class="btn-primary btn-block" data-key="login_btn">Login</button><div class="modal-divider">OR</div><div id="googleLoginBtn" class="google-btn"></div><p class="modal-footer-text"><span data-key="no_account">Don't have an account?</span> <a href="#" id="showSignupBtn" data-key="signup_link">Sign up</a></p></div></div></div>
+  <!-- Signup Modal -->
+  <div id="signupModal" class="modal"><div class="modal-content login-modal"><div class="modal-header"><h3 data-key="signup_title">Sign Up</h3><span class="close" id="closeSignupModal">&times;</span></div><div class="modal-body"><div class="form-group"><input type="text" id="regName" placeholder="Full Name" class="form-input" data-placeholder-key="full_name"></div><div class="form-group"><input type="email" id="regEmail" placeholder="Email" class="form-input" data-placeholder-key="email"></div><div class="form-group"><input type="password" id="regPassword" placeholder="Password" class="form-input" data-placeholder-key="password"></div><div class="form-group"><input type="password" id="regConfirmPassword" placeholder="Confirm Password" class="form-input" data-placeholder-key="confirm_password"></div><button id="doRegisterBtn" class="btn-primary btn-block" data-key="signup_btn">Sign Up</button><p class="modal-footer-text"><span data-key="have_account">Already have an account?</span> <a href="#" id="showLoginBtn" data-key="login_link">Login</a></p></div></div></div>
+  <footer>
+  <div class="footer-container">
+    <div class="footer-links">
+      <!-- Nhóm 1: Chính sách -->
+      <div class="footer-links-group">
+        <a href="#" data-key="terms">Terms and Conditions</a>
+        <a href="#" data-key="paid_services">Paid Services Terms and Conditions</a>
+        <a href="#" data-key="youth_policy">Child and Youth Protection Policy</a>
+      </div>
+      <!-- Nhóm 2: Bảo mật -->
+      <div class="footer-links-group">
+        <a href="#" data-key="privacy">Privacy Policy</a>
+        <a href="#" data-key="cookie">Cookie Policy</a>
+        <a href="#" data-key="cookie_settings">Cookie Settings</a>
+      </div>
+      <!-- Nhóm 3: Khám phá (MỚI) -->
+      <div class="footer-links-group">
+        <strong style="color: var(--text-primary, #1a1a1a);" data-key="explore">Explore</strong>
+        <a href="/crud/about.html" data-key="about">About Us</a>
+        <a href="/crud/contact.html" data-key="contact">Contact</a>
+        <a href="/crud/tracking.html" data-key="tracking">Order Tracking</a>
+      </div>
+      <!-- Nhóm 4: Mạng xã hội -->
+      <div class="footer-links-group">
+        <strong style="color: var(--text-primary, #1a1a1a);" data-key="follow_us">Follow Us</strong>
+        <div class="footer-socials">
+          <a href="https://www.facebook.com/hoang.huyen.619483" target="_blank" rel="noopener noreferrer" aria-label="Facebook" title="Facebook">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.987H7.898v-2.89h2.54V9.797c0-2.507 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 16.991 22 12z"/></svg>
+          </a>
+          <a href="https://www.tiktok.com/@neyuhh25" target="_blank" rel="noopener noreferrer" aria-label="TikTok" title="TikTok">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/></svg>
+          </a>
+          <a href="https://www.instagram.com/_neyuh.h_5/" target="_blank" rel="noopener noreferrer" aria-label="Instagram" title="Instagram">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
+          </a>
+        </div>
+      </div>
+    </div>
+    <div class="company-info">
+      <div class="company-name">Company Name <strong>SHOTTYSHOP Co., Ltd.</strong> | CEO <strong>Hoàng Thu Huyền</strong> | Tel. <strong>(+84) 974270549</strong></div>
+      <div class="company-address">Address <strong>SN14 ng68/19 p.Triều Khúc - Thanh Liệt - Hà Nội, Vietnam</strong> | Business Registration No. <strong>0974270549</strong></div>
+      <div class="company-registration">Mail Order Business Registration No. <strong>2025-HCMC-01234</strong> | Hosted by <strong>Amazon Web Services, Inc. and VNG Cloud</strong> | E-mail <strong>support@shottyshop.com</strong></div>
+      <div class="legal-notice">Some products on SHOTTYSHOP are offered by individual third-party sellers. In such cases, SHOTTYSHOP Co., Ltd. acts solely as an e-commerce intermediary and is not a party to the transaction. SHOTTYSHOP Co., Ltd. assumes no responsibility for the product information or any transactions conducted by the individual sellers.</div>
+      <div class="copyright">2026 SHOTTYSHOP Co., Ltd. or its affiliates (SHOTTYSHOP Japan Inc. & SHOTTYSHOP America Inc.) all rights reserved.</div>
+      <div class="footer-map" style="margin-top:1.5rem;padding-top:1.25rem;border-top:1px solid var(--border-color, #e5e5e5);">
+        <strong style="display:block;margin-bottom:0.75rem;font-size:0.9rem;color:var(--text-primary, #1a1a1a);" data-key="store_location">Vị trí cửa hàng</strong>
+        <div style="border-radius:12px;overflow:hidden;border:1px solid var(--border-color, #e5e5e5);max-width:520px;">
+          <iframe src="https://maps.google.com/maps?q=20.9809869,105.797854&z=16&output=embed" width="100%" height="240" style="border:0;display:block;filter:grayscale(1) contrast(1.05);" loading="lazy" referrerpolicy="no-referrer-when-downgrade" title="Bản đồ SHOTTYSHOP - Triều Khúc, Hà Nội"></iframe>
+        </div>
+        <a href="https://maps.app.goo.gl/8WFhoJk5B7j5grFK8" target="_blank" rel="noopener" style="display:inline-block;margin-top:0.6rem;font-size:0.8rem;color:var(--text-primary, #1a1a1a);text-decoration:underline;" data-key="open_in_maps">Mở trên Google Maps →</a>
+      </div>
+    </div>
+  </div>
+</footer>
+  <script src="/js/common.js"></script>
+  <script src="/script.js?v=fix-products"></script>
+
+      <!-- Chatbox -->
+  <script>
+    (function() {
+      function loadChatbox() {
+        if (document.getElementById('floatingChat')) return;
+        fetch('../components/chatbox.html')
+          .then(res => res.text())
+          .then(html => {
+            document.body.insertAdjacentHTML('beforeend', html);
+            /* Re-execute scripts inside the injected HTML */
+            const tmp = document.createElement('div');
+            tmp.innerHTML = html;
+            tmp.querySelectorAll('script').forEach(oldScript => {
+              const s = document.createElement('script');
+              s.textContent = oldScript.textContent;
+              document.body.appendChild(s);
+            });
+          })
+          .catch(err => console.error('Failed to load chatbox:', err));
+      }
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', loadChatbox);
+      } else {
+        loadChatbox();
+      }
+    })();
+  </script>
+
+</body>
+</html>

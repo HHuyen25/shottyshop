@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title data-key="login_title">Login - SHOTTYSHOP</title>
+  <link rel="stylesheet" href="/style.css">
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <style>
+    .login-container { max-width: 450px; margin: 50px auto; padding: 0 20px; }
+    .login-card { background: var(--bg-card, white); border-radius: 24px; padding: 2rem; box-shadow: 0 8px 30px var(--shadow, rgba(0,0,0,0.12)); border: 1px solid var(--border-color, #eee); animation: fadeInUp 0.5s ease; }
+    @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    .login-header { text-align: center; margin-bottom: 2rem; }
+    .login-header .logo { font-size: 3rem; margin-bottom: 0.5rem; }
+    .login-header h2 { font-size: 1.5rem; color: var(--text-primary, #1a1a1a); }
+    .login-header p { color: var(--text-secondary, #666); font-size: 0.85rem; }
+    .form-group { margin-bottom: 1.25rem; }
+    .form-group label { display: block; font-weight: 500; margin-bottom: 0.5rem; color: var(--text-primary, #1a1a1a); }
+    .form-group input { width: 100%; padding: 12px 16px; border: 2px solid var(--border-color, #e5e5e5); border-radius: 12px; font-size: 1rem; background: var(--bg-card, white); color: var(--text-primary, #1a1a1a); transition: all 0.2s; }
+    .form-group input:focus { outline: none; border-color: #1a1a1a; }
+    .form-group input.error { border-color: #ef4444; }
+    .error-message { color: #ef4444; font-size: 0.75rem; margin-top: 0.25rem; display: none; }
+    .btn-primary { width: 100%; background: #1a1a1a; color: white; padding: 12px; border: none; border-radius: 12px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+    .btn-primary:hover { background: #333; transform: translateY(-2px); }
+    .btn-primary:disabled { background: #ccc; cursor: not-allowed; transform: none; }
+    .divider { text-align: center; margin: 1.5rem 0; position: relative; }
+    .divider::before, .divider::after { content: ''; position: absolute; top: 50%; width: calc(50% - 40px); height: 1px; background: var(--border-color, #e5e5e5); }
+    .divider::before { left: 0; } .divider::after { right: 0; }
+    .divider span { background: var(--bg-card, white); padding: 0 1rem; color: var(--text-secondary, #999); font-size: 0.8rem; }
+    .google-btn { display: flex; justify-content: center; margin: 1rem 0; }
+    .links { text-align: center; margin-top: 1.5rem; }
+    .links a { color: var(--text-secondary, #666); text-decoration: none; font-size: 0.85rem; margin: 0 0.5rem; }
+    .links a:hover { color: #1a1a1a; text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <div id="header-placeholder"></div>
+  <div class="login-container">
+    <div class="login-card">
+      <div class="login-header"><div class="logo"></div><h2 data-key="welcome_back">Welcome Back!</h2><p data-key="sign_in_prompt">Sign in to your SHOTTYSHOP account</p></div>
+      <div id="globalError" class="error-message" style="text-align:center; margin-bottom:1rem; display:none;"></div>
+      <div class="form-group"><label data-key="email">Email Address</label><input type="email" id="loginEmail" placeholder="your@email.com" data-placeholder-key="email"><div class="error-message" id="emailError" data-key="valid_email">Please enter a valid email</div></div>
+      <div class="form-group"><label data-key="password">Password</label><input type="password" id="loginPassword" placeholder="Enter your password" data-placeholder-key="password"><div class="error-message" id="passwordError" data-key="password_required">Password is required</div></div>
+      <button id="doLoginBtn" class="btn-primary" data-key="sign_in">Sign In →</button>
+      <div class="divider"><span data-key="or">OR</span></div>
+      <div id="googleLoginBtn" class="google-btn"></div>
+      <div class="links"><a href="forgot-password.html" data-key="forgot_password">Forgot password?</a><span>|</span><a href="signup.html" data-key="create_account">Create account</a></div>
+    </div>
+  </div>
+  <script src="/js/common.js"></script>
+  <script>
+    const API_URL = 'http://localhost:3000/api';
+    const loginBtn = document.getElementById('doLoginBtn');
+    const emailInput = document.getElementById('loginEmail');
+    const passwordInput = document.getElementById('loginPassword');
+    const globalError = document.getElementById('globalError');
+    const emailError = document.getElementById('emailError');
+    const passwordError = document.getElementById('passwordError');
+    // Trang cần quay về sau khi đăng nhập (do trang trước truyền qua ?redirect=)
+    const _rp = new URLSearchParams(location.search).get('redirect') || '';
+    const _redirect = (_rp.startsWith('/') && !_rp.startsWith('//')) ? _rp : '/index.html';
+    // "Create account" mang theo redirect để signup xong quay về đúng trang
+    document.addEventListener('DOMContentLoaded', () => {
+      const su = document.querySelector('a[data-key="create_account"]');
+      if (su) su.href = 'signup.html?redirect=' + encodeURIComponent(_redirect);
+    });
+    
+    function validateForm() { 
+      let isValid = true; 
+      const email = emailInput.value.trim(); 
+      const password = passwordInput.value; 
+      if (!email) { 
+        emailError.style.display = 'block'; 
+        emailInput.classList.add('error'); 
+        isValid = false; 
+      } else if (!email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) { 
+        emailError.textContent = translations[currentLanguage]?.valid_email || 'Please enter a valid email address'; 
+        emailError.style.display = 'block'; 
+        emailInput.classList.add('error'); 
+        isValid = false; 
+      } else { 
+        emailError.style.display = 'none'; 
+        emailInput.classList.remove('error'); 
+      } 
+      if (!password) { 
+        passwordError.style.display = 'block'; 
+        passwordInput.classList.add('error'); 
+        isValid = false; 
+      } else { 
+        passwordError.style.display = 'none'; 
+        passwordInput.classList.remove('error'); 
+      } 
+      return isValid; 
+    }
+    
+    emailInput.addEventListener('input', () => { 
+      emailError.style.display = 'none'; 
+      emailInput.classList.remove('error'); 
+      globalError.style.display = 'none'; 
+    });
+    passwordInput.addEventListener('input', () => { 
+      passwordError.style.display = 'none'; 
+      passwordInput.classList.remove('error'); 
+      globalError.style.display = 'none'; 
+    });
+    
+    // ==================== SỬA LỖI: Đổi endpoint từ /users/login thành /auth/login ====================
+    async function login() { 
+      if (!validateForm()) return; 
+      const email = emailInput.value.trim(); 
+      const password = passwordInput.value; 
+      loginBtn.disabled = true; 
+      loginBtn.textContent = translations[currentLanguage]?.signing_in || 'Signing in...'; 
+      try { 
+        // ĐÃ SỬA: Dùng đúng endpoint /auth/login
+        const res = await fetch(`${API_URL}/auth/login`, { 
+          method: 'POST', 
+          headers: { 'Content-Type': 'application/json' }, 
+          body: JSON.stringify({ email, password }) 
+        }); 
+        const data = await res.json(); 
+        if (res.ok) { 
+          localStorage.setItem('authToken', data.token); 
+          localStorage.setItem('currentUserId', data.user._id); 
+          if (window.toast) toast.success(`${translations[currentLanguage]?.welcome_back || 'Welcome back,'} ${data.user.name}!`); 
+          if (data.user.role === 'admin') setTimeout(() => window.location.href = '/admin/admin.html', 500);
+          else if (data.user.role === 'staff') setTimeout(() => window.location.href = '/staff/staff.html', 500);
+          else setTimeout(() => window.location.href = _redirect, 500);
+        } else { 
+          globalError.textContent = data.error || translations[currentLanguage]?.invalid_credentials || 'Invalid email or password'; 
+          globalError.style.display = 'block'; 
+          loginBtn.disabled = false; 
+          loginBtn.textContent = translations[currentLanguage]?.sign_in || 'Sign In →'; 
+        } 
+      } catch (err) { 
+        console.error(err); 
+        globalError.textContent = translations[currentLanguage]?.cannot_connect || 'Cannot connect to server. Please try again.'; 
+        globalError.style.display = 'block'; 
+        loginBtn.disabled = false; 
+        loginBtn.textContent = translations[currentLanguage]?.sign_in || 'Sign In →'; 
+      } 
+    }
+    
+    let _gClientId = null;
+    async function initializeGoogleLogin() {
+      const btn = document.getElementById('googleLoginBtn');
+      const divider = document.querySelector('.divider');
+      if (_gClientId === null) {
+        try {
+          const r = await fetch(`${API_URL}/auth/google/config`);
+          const c = await r.json();
+          _gClientId = c.enabled ? c.clientId : '';
+        } catch (e) { _gClientId = ''; }
+      }
+      // Chưa cấu hình Client ID -> ẩn nút Google (chỉ hiện đăng nhập email)
+      if (!_gClientId) { if (btn) btn.style.display = 'none'; if (divider) divider.style.display = 'none'; return; }
+      if (typeof google === 'undefined' || !google.accounts) { setTimeout(initializeGoogleLogin, 400); return; }
+      google.accounts.id.initialize({ client_id: _gClientId, callback: handleGoogleCredentialResponse });
+      // width phải là SỐ pixel (không phải '100%'); lấy theo bề rộng khung, tối đa 400
+      const w = Math.min(400, Math.round(btn.offsetWidth) || 360);
+      google.accounts.id.renderButton(btn, { theme: 'outline', size: 'large', width: w });
+    }
+    
+    async function handleGoogleCredentialResponse(response) { 
+      try { 
+        const res = await fetch(`${API_URL}/auth/google`, { 
+          method: 'POST', 
+          headers: { 'Content-Type': 'application/json' }, 
+          body: JSON.stringify({ id_token: response.credential }) 
+        }); 
+        const data = await res.json(); 
+        if (res.ok) { 
+          localStorage.setItem('authToken', data.token);
+          localStorage.setItem('currentUserId', data.user._id);
+          if (window.toast) toast.success(`${translations[currentLanguage]?.welcome || 'Welcome'}, ${data.user.name}!`);
+          if (data.user.role === 'admin') window.location.href = '/admin/admin.html';
+          else if (data.user.role === 'staff') window.location.href = '/staff/staff.html';
+          else window.location.href = _redirect;
+        } else {
+          if (window.toast) toast.error(data.error || translations[currentLanguage]?.google_login_failed || 'Google login failed'); 
+        } 
+      } catch (err) { 
+        if (window.toast) toast.error(translations[currentLanguage]?.google_login_failed || 'Google login failed'); 
+      } 
+    }
+    
+    passwordInput.addEventListener('keypress', (e) => { 
+      if (e.key === 'Enter') login(); 
+    }); 
+    emailInput.addEventListener('keypress', (e) => { 
+      if (e.key === 'Enter') login(); 
+    }); 
+    loginBtn.addEventListener('click', login);
+    initializeGoogleLogin();
+  </script>
+</body>
+</html>

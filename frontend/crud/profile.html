@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title data-key="profile_title">My Profile - SHOTTYSHOP</title>
+  <link rel="stylesheet" href="/style.css">
+  <style>
+    .profile-container { max-width: 600px; margin: 2rem auto; padding: 0 1rem; }
+    .profile-card { background: white; border-radius: 16px; padding: 2rem; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+    .avatar-section { text-align: center; margin-bottom: 1.5rem; position: relative; }
+    .avatar-image { width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 3px solid #e5e5e5; cursor: pointer; }
+    .avatar-upload-btn { position: absolute; bottom: 0; right: calc(50% - 50px); background: #1a1a1a; color: white; border: none; border-radius: 50%; width: 30px; height: 30px; cursor: pointer; font-size: 16px; }
+    .form-group { margin-bottom: 1rem; }
+    .form-group label { display: block; margin-bottom: 0.5rem; font-weight: 500; }
+    .form-group input { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; }
+    .form-group input:focus { outline: none; border-color: #1a1a1a; }
+    .form-group input:disabled { background: #f5f5f5; color: #999; }
+    .btn-primary { background: #1a1a1a; color: white; padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; transition: all 0.2s; }
+    .btn-primary:hover { background: #333; transform: translateY(-2px); }
+    .btn-secondary { background: #f0f0f0; border: 1px solid #ddd; padding: 10px 20px; border-radius: 8px; cursor: pointer; transition: all 0.2s; }
+    .btn-secondary:hover { background: #e0e0e0; }
+    .message { display: none; padding: 10px; border-radius: 8px; margin-bottom: 1rem; }
+    .message.success { background: #d1fae5; color: #059669; }
+    .message.error { background: #fee2e2; color: #dc2626; }
+    .flex-buttons { display: flex; gap: 1rem; margin-top: 1rem; }
+    .password-hint { font-size: 0.7rem; color: #999; margin-top: 0.25rem; }
+    body.dark-mode .profile-card { background: #1e1e1e; }
+    body.dark-mode .form-group input { background: #2a2a2a; border-color: #444; color: white; }
+    body.dark-mode .form-group input:disabled { background: #333; }
+    body.dark-mode .btn-secondary { background: #333; border-color: #444; color: white; }
+  </style>
+</head>
+<body>
+  <div id="header-placeholder"></div>
+  <div class="profile-container">
+    <div class="profile-card">
+      <div class="avatar-section">
+        <img id="avatarImg" class="avatar-image" src="https://picsum.photos/100/100">
+        <button class="avatar-upload-btn" id="avatarUploadBtn" data-key="upload_avatar"></button>
+        <input type="file" id="avatarFileInput" accept="image/*" style="display:none">
+      </div>
+      <div id="message" class="message"></div>
+      <div class="form-group">
+        <label data-key="full_name">Full Name</label>
+        <input type="text" id="fullName" placeholder="Enter your full name" data-placeholder-key="full_name">
+      </div>
+      <div class="form-group">
+        <label data-key="email">Email</label>
+        <input type="email" id="email" disabled>
+      </div>
+      <div class="form-group">
+        <label data-key="role">Role</label>
+        <input type="text" id="role" disabled>
+      </div>
+      <div class="form-group">
+        <label data-key="change_password">Change Password (optional)</label>
+        <input type="password" id="newPassword" placeholder="New password" data-placeholder-key="new_password">
+        <div class="password-hint" data-key="password_hint">Leave empty to keep current password</div>
+      </div>
+      <div class="form-group">
+        <label data-key="confirm_password">Confirm Password</label>
+        <input type="password" id="confirmPassword" placeholder="Confirm new password" data-placeholder-key="confirm_password">
+      </div>
+      <div class="flex-buttons">
+        <button id="saveBtn" class="btn-primary" data-key="save_changes">Save Changes</button>
+        <button id="logoutBtn" class="btn-secondary" data-key="logout">Logout</button>
+      </div>
+    </div>
+  </div>
+  <script src="/js/common.js"></script>
+  <script>
+    function showMessage(text, isSuccess) {
+      const msg = document.getElementById('message');
+      msg.textContent = text;
+      msg.className = `message ${isSuccess ? 'success' : 'error'}`;
+      msg.style.display = 'block';
+      setTimeout(() => msg.style.display = 'none', 3000);
+    }
+    
+    async function uploadAvatar(file) {
+      const formData = new FormData();
+      formData.append('file', file);
+      try {
+        showLoading();
+        const res = await fetch(`http://localhost:3000/api/upload?type=avatar`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${authToken}` },
+          body: formData
+        });
+        if (!res.ok) throw new Error('Upload failed');
+        const data = await res.json();
+        return data.url;
+      } catch(e) {
+        showMessage(translations[currentLanguage]?.avatar_upload_failed || 'Avatar upload failed', false);
+        return null;
+      } finally { hideLoading(); }
+    }
+    
+    async function saveProfile() {
+      const name = document.getElementById('fullName').value.trim();
+      const newPass = document.getElementById('newPassword').value;
+      const confirm = document.getElementById('confirmPassword').value;
+      if (!name) { showMessage(translations[currentLanguage]?.name_required || 'Please enter your name', false); return; }
+      if (newPass !== confirm) { showMessage(translations[currentLanguage]?.password_mismatch || 'Passwords do not match', false); return; }
+      if (newPass && newPass.length < 6) { showMessage(translations[currentLanguage]?.password_min || 'Password must be at least 6 characters', false); return; }
+      const update = { name };
+      if (newPass) update.password = newPass;
+      try {
+        showLoading();
+        const res = await fetch(`${API_URL}/users/${currentUser._id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
+          body: JSON.stringify(update)
+        });
+        if (res.ok) {
+          const updated = await res.json();
+          currentUser = updated;
+          localStorage.setItem('currentUserId', updated._id);
+          document.getElementById('avatarImg').src = getImageUrl(currentUser.avatar) || 'https://picsum.photos/100/100';
+          document.getElementById('fullName').value = currentUser.name;
+          document.getElementById('newPassword').value = '';
+          document.getElementById('confirmPassword').value = '';
+          showMessage(translations[currentLanguage]?.profile_updated || 'Profile updated successfully!', true);
+          if (typeof updateUserUI === 'function') updateUserUI();
+          if (window.toast) toast.success(translations[currentLanguage]?.profile_updated || 'Profile updated!');
+        } else { showMessage(translations[currentLanguage]?.update_failed || 'Update failed', false); }
+      } catch(e) { showMessage(translations[currentLanguage]?.cannot_connect || 'Cannot connect to server', false); }
+      finally { hideLoading(); }
+    }
+    
+    async function loadProfile() {
+      if (!currentUser) await checkLoginStatus();
+      if (currentUser) {
+        document.getElementById('fullName').value = currentUser.name || '';
+        document.getElementById('email').value = currentUser.email || '';
+        document.getElementById('role').value = (currentUser.role || 'customer').toUpperCase();
+        document.getElementById('avatarImg').src = getImageUrl(currentUser.avatar) || 'https://picsum.photos/100/100';
+      } else {
+        if (window.toast) toast.warning(translations[currentLanguage]?.login_first || 'Please login first');
+        setTimeout(() => window.location.href = 'login.html', 1000);
+      }
+    }
+    
+    document.getElementById('avatarUploadBtn').addEventListener('click', () => document.getElementById('avatarFileInput').click());
+    document.getElementById('avatarFileInput').addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      if (!file.type.startsWith('image/')) { showMessage(translations[currentLanguage]?.select_image || 'Please select an image file', false); return; }
+      if (file.size > 5 * 1024 * 1024) { showMessage(translations[currentLanguage]?.image_max || 'Image must be less than 5MB', false); return; }
+      const avatarUrl = await uploadAvatar(file);
+      if (avatarUrl) {
+        const res = await fetch(`${API_URL}/users/${currentUser._id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
+          body: JSON.stringify({ avatar: avatarUrl })
+        });
+        if (res.ok) {
+          const updatedUser = await res.json();
+          currentUser = updatedUser;
+          document.getElementById('avatarImg').src = getImageUrl(currentUser.avatar);
+          if (typeof updateUserUI === 'function') updateUserUI();
+          showMessage(translations[currentLanguage]?.avatar_updated || 'Avatar updated!', true);
+          if (window.toast) toast.success(translations[currentLanguage]?.avatar_changed || 'Avatar changed!');
+        } else { showMessage(translations[currentLanguage]?.avatar_update_failed || 'Failed to update avatar', false); }
+      }
+    });
+    
+    document.getElementById('saveBtn').addEventListener('click', saveProfile);
+    document.getElementById('logoutBtn').addEventListener('click', logout);
+    window.initPage = async () => { if (!(await (window.requireLogin ? window.requireLogin() : Promise.resolve(true)))) return; loadProfile(); };
+  </script>
+</body>
+</html>

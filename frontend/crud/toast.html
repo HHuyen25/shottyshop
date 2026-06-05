@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title data-key="toast_demo_title">Toast Notifications - SHOTTYSHOP</title>
+  <link rel="stylesheet" href="/style.css">
+  <style>
+    .toast-demo-container { max-width: 800px; margin: 2rem auto; padding: 2rem; }
+    .demo-card { background: var(--bg-card, white); border-radius: 24px; padding: 2rem; box-shadow: 0 4px 20px var(--shadow, rgba(0,0,0,0.1)); border: 1px solid var(--border-color, #eee); }
+    .demo-header { text-align: center; margin-bottom: 2rem; }
+    .demo-header h1 { font-size: 2rem; margin-bottom: 0.5rem; color: #0a0a0a; }
+    .demo-header p { color: var(--text-secondary, #666); }
+    .demo-buttons { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; margin: 2rem 0; }
+    .demo-btn { padding: 12px 24px; border: none; border-radius: 40px; cursor: pointer; font-weight: 600; transition: all 0.2s; }
+    .demo-btn-success { background: #10b981; color: white; }
+    .demo-btn-error { background: #ef4444; color: white; }
+    .demo-btn-warning { background: #f59e0b; color: white; }
+    .demo-btn-info { background: #3b82f6; color: white; }
+    .demo-btn-dark { background: #0a0a0a; color: white; }
+    .demo-btn-light { background: #f0f0f0; color: #0a0a0a; }
+    .demo-btn:hover { transform: translateY(-2px); filter: brightness(0.95); }
+    .code-block { background: var(--bg-body, #f5f5f5); border-radius: 12px; padding: 1rem; margin: 1rem 0; overflow-x: auto; font-family: monospace; font-size: 0.8rem; }
+    .code-block pre { margin: 0; color: var(--text-primary, #0a0a0a); }
+    .feature-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin: 2rem 0; }
+    .feature-item { text-align: center; padding: 1rem; background: var(--bg-body, #f8f9fa); border-radius: 12px; }
+    .feature-icon { font-size: 2rem; margin-bottom: 0.5rem; }
+    .slider-demo { margin: 2rem 0; }
+    .slider-value { display: inline-block; margin-left: 1rem; font-weight: 600; color: #10b981; }
+    body.dark-mode .code-block { background: #2a2a2a; }
+    body.dark-mode .feature-item { background: #1e1e1e; }
+  </style>
+</head>
+<body>
+  <div id="header-placeholder"></div>
+  <div class="toast-demo-container">
+    <div class="demo-card">
+      <div class="demo-header"><h1 data-key="toast_demo">Toast Notification System</h1><p data-key="toast_description">Beautiful, customizable toast notifications for your app</p></div>
+      <div class="demo-buttons"><button class="demo-btn demo-btn-success" id="toastSuccess" data-key="toast_success">Success Toast</button><button class="demo-btn demo-btn-error" id="toastError" data-key="toast_error">Error Toast</button><button class="demo-btn demo-btn-warning" id="toastWarning" data-key="toast_warning">Warning Toast</button><button class="demo-btn demo-btn-info" id="toastInfo" data-key="toast_info">Info Toast</button></div>
+      <div class="demo-buttons"><button class="demo-btn demo-btn-dark" id="toastLong" data-key="toast_long">Long Duration (5s)</button><button class="demo-btn demo-btn-dark" id="toastShort" data-key="toast_short">Short Duration (1.5s)</button><button class="demo-btn demo-btn-light" id="toastNoClose" data-key="toast_no_close">No Close Button</button></div>
+      <div class="slider-demo"><label data-key="custom_duration">Custom Duration: <span id="durationValue" class="slider-value">3000ms</span></label><br><input type="range" id="durationSlider" min="1000" max="10000" step="500" value="3000"><button class="demo-btn demo-btn-info" id="toastCustom" style="margin-left:1rem;" data-key="show_custom">Show Custom Toast</button></div>
+      <h3 style="margin:2rem 0 1rem;" data-key="features">Features</h3>
+      <div class="feature-grid"><div class="feature-item"><div class="feature-icon"></div><div data-key="feature_colors">4 Color Variants</div></div><div class="feature-item"><div class="feature-icon"></div><div data-key="feature_duration">Custom Duration</div></div><div class="feature-item"><div class="feature-icon"></div><div data-key="feature_close">Close Button</div></div><div class="feature-item"><div class="feature-icon"></div><div data-key="feature_responsive">Mobile Responsive</div></div><div class="feature-item"><div class="feature-icon">🌙</div><div data-key="feature_darkmode">Dark Mode Support</div></div><div class="feature-item"><div class="feature-icon"></div><div data-key="feature_animation">Smooth Animation</div></div></div>
+      <h3 style="margin:2rem 0 1rem;" data-key="usage_examples">Usage Examples</h3>
+      <div class="code-block"><pre>// Basic usage
+toast.success('Operation completed successfully!');
+toast.error('Something went wrong');
+toast.warning('Please check your input');
+toast.info('New update available');
+
+// Advanced usage
+toast.show('Custom message', {
+  title: 'Custom Title',
+  type: 'success',
+  duration: 5000,
+  closable: true
+});</pre></div>
+      <a href="http://localhost:3000" class="back-link" style="display:inline-block; margin-top:2rem; text-align:center; width:100%; color:var(--text-secondary, #666); text-decoration:none;" data-key="back_to_shop">← Back to Shop</a>
+    </div>
+  </div>
+  <script src="/js/common.js"></script>
+  <script>
+    document.getElementById('toastSuccess')?.addEventListener('click', () => toast.success(translations[currentLanguage]?.action_success || 'Your action was completed successfully!', translations[currentLanguage]?.success || 'Success'));
+    document.getElementById('toastError')?.addEventListener('click', () => toast.error(translations[currentLanguage]?.action_error || 'An error occurred. Please try again.', translations[currentLanguage]?.error || 'Error'));
+    document.getElementById('toastWarning')?.addEventListener('click', () => toast.warning(translations[currentLanguage]?.action_warning || 'This action cannot be undone!', translations[currentLanguage]?.warning || 'Warning'));
+    document.getElementById('toastInfo')?.addEventListener('click', () => toast.info(translations[currentLanguage]?.new_messages || 'You have 3 new messages', translations[currentLanguage]?.information || 'Information'));
+    document.getElementById('toastLong')?.addEventListener('click', () => toast.show(translations[currentLanguage]?.long_toast_msg || 'This toast will stay for 5 seconds', { title: translations[currentLanguage]?.long_duration || 'Long Duration', type: 'info', duration: 5000 }));
+    document.getElementById('toastShort')?.addEventListener('click', () => toast.show(translations[currentLanguage]?.short_toast_msg || 'Quick notification!', { title: translations[currentLanguage]?.short || 'Short', type: 'success', duration: 1500 }));
+    document.getElementById('toastNoClose')?.addEventListener('click', () => toast.show(translations[currentLanguage]?.no_close_msg || 'You cannot close me manually', { title: translations[currentLanguage]?.no_close_button || 'No Close Button', type: 'warning', closable: false, duration: 3000 }));
+    const slider = document.getElementById('durationSlider'); const durationValue = document.getElementById('durationValue'); slider?.addEventListener('input', (e) => { durationValue.textContent = e.target.value + 'ms'; });
+    document.getElementById('toastCustom')?.addEventListener('click', () => { const duration = parseInt(slider?.value || 3000); toast.show(`${translations[currentLanguage]?.custom_toast_msg || 'This toast appears for'} ${duration}ms`, { title: translations[currentLanguage]?.custom_toast || 'Custom Toast', type: 'info', duration: duration }); });
+    let count = 0; setInterval(() => { const demoContainer = document.querySelector('.demo-card'); if (demoContainer && document.hasFocus()) { count++; if (count % 10 === 0 && count < 30) { toast.info(`${translations[currentLanguage]?.demo_notification || 'Demo notification'} #${count}`, translations[currentLanguage]?.auto_message || 'Auto Message'); } } }, 30000);
+  </script>
+</body>
+</html>

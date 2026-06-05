@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title data-key="cart_title">Shopping Cart - SHOTTYSHOP</title>
+  <link rel="stylesheet" href="/style.css">
+  <style>
+    .cart-container { max-width: 1200px; margin: 2rem auto; padding: 0 1rem; }
+    .cart-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; }
+    .cart-table { width: 100%; background: white; border-radius: 16px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+    .cart-table th, .cart-table td { padding: 1rem; text-align: left; border-bottom: 1px solid #eee; }
+    .cart-table th { background: #fafafa; font-weight: 600; }
+    .cart-item-img { width: 80px; height: 80px; object-fit: cover; border-radius: 8px; }
+    .cart-item-quantity { display: flex; align-items: center; gap: 0.5rem; }
+    .quantity-btn { width: 30px; height: 30px; border: 1px solid #ddd; background: white; border-radius: 6px; cursor: pointer; transition: all 0.2s; }
+    .quantity-btn:hover { background: #f0f0f0; }
+    .quantity-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .cart-summary { margin-top: 2rem; text-align: right; padding: 1.5rem; background: white; border-radius: 16px; }
+    .btn-checkout { background: #1a1a1a; color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-weight: 600; margin-left: 1rem; transition: all 0.2s; }
+    .btn-checkout:hover { background: #333; transform: translateY(-2px); }
+    .btn-clear { background: #f0f0f0; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; transition: all 0.2s; }
+    .btn-clear:hover { background: #e0e0e0; }
+    .empty-cart { text-align: center; padding: 3rem; background: white; border-radius: 16px; }
+    .continue-shopping { color: #1a1a1a; text-decoration: none; }
+    .stock-warning { color: #ef4444; font-size: 0.7rem; margin-top: 5px; }
+    @media (max-width: 768px) { .cart-table th, .cart-table td { padding: 0.5rem; } .cart-item-img { width: 50px; height: 50px; } .cart-table { font-size: 0.8rem; } }
+    body.dark-mode .cart-table, body.dark-mode .cart-summary, body.dark-mode .empty-cart { background: #1e1e1e; }
+    body.dark-mode .cart-table th { background: #2a2a2a; color: #e0e0e0; }
+    body.dark-mode .cart-table td { border-bottom-color: #333; }
+    body.dark-mode .quantity-btn { background: #2a2a2a; border-color: #444; color: white; }
+    body.dark-mode .btn-clear { background: #333; color: white; }
+  </style>
+</head>
+<body>
+  <div id="header-placeholder"></div>
+  <div class="cart-container">
+    <div class="cart-header">
+      <h1 data-key="cart">🛒 Shopping Cart</h1>
+      <a href="http://localhost:3000" class="continue-shopping" data-key="continue_shopping">← Continue Shopping</a>
+    </div>
+    <div id="cartContent"></div>
+  </div>
+  <script src="/js/common.js"></script>
+  <script>
+    let cart = [];
+    let productsStock = {};
+
+    async function loadProductsStock() {
+      try {
+        const res = await fetch(`${API_URL}/products`);
+        if (!res.ok) throw new Error('Network response was not ok');
+        let data = await res.json();
+        // Xử lý dữ liệu trả về: nếu là object có trường 'products' thì lấy mảng đó, nếu không thì chính data
+        let products = Array.isArray(data) ? data : (data.products && Array.isArray(data.products) ? data.products : []);
+        if (!Array.isArray(products)) {
+          console.error('Products data is not an array:', products);
+          products = [];
+        }
+        products.forEach(p => productsStock[p._id] = p.stock || 0);
+      } catch(e) { 
+        console.error('Failed to load stock info', e);
+        // Dự phòng: không có stock thì cho phép mọi số lượng
+      }
+    }
+
+    function loadCart() {
+      cart = JSON.parse(localStorage.getItem('shotyCart')) || [];
+      renderCart();
+    }
+
+    function getStockForItem(itemId) { 
+      return productsStock[itemId] !== undefined ? productsStock[itemId] : 999; 
+    }
+
+    function renderCart() {
+      const container = document.getElementById('cartContent');
+      if (!cart.length) {
+        container.innerHTML = `<div class="empty-cart"><p data-key="empty_cart">🛒 Your cart is empty</p><a href="http://localhost:3000" class="btn-primary" style="display:inline-block;margin-top:1rem;" data-key="continue_shopping">Continue Shopping</a></div>`;
+        return;
+      }
+      let itemsHtml = '';
+      let total = 0;
+      cart.forEach((item, idx) => {
+        const stock = getStockForItem(item.id);
+        const isOverStock = item.quantity > stock;
+        const itemTotal = item.price * item.quantity;
+        total += itemTotal;
+        const imgUrl = getImageUrl(item.image) || 'https://picsum.photos/80/80';
+        itemsHtml += `
+          <tr data-idx="${idx}">
+            <td><img src="${imgUrl}" class="cart-item-img" onerror="this.src='https://picsum.photos/80/80'"></td>
+            <td><strong>${escapeHtml(item.name)}</strong></td>
+            <td>${convertPrice(item.price)}</td>
+            <td><div class="cart-item-quantity"><button class="quantity-btn minus-btn" data-idx="${idx}" ${item.quantity <= 1 ? 'disabled' : ''}>-</button><span class="qty-value">${item.quantity}</span><button class="quantity-btn plus-btn" data-idx="${idx}" ${item.quantity >= stock ? 'disabled' : ''}>+</button></div>${isOverStock ? `<div class="stock-warning" data-key="only_left">Only ${stock} left!</div>` : ''}</td>
+            <td>${convertPrice(itemTotal)}</td>
+            <td><button class="remove-btn" data-idx="${idx}" style="background:#dc2626;color:white;border:none;padding:5px 10px;border-radius:4px;cursor:pointer;" data-key="remove">✕</button></td>
+           </tr>`;
+      });
+      const html = `
+        <table class="cart-table"><thead><tr><th data-key="product">Product</th><th data-key="name">Name</th><th data-key="price">Price</th><th data-key="quantity">Quantity</th><th data-key="total">Total</th><th></th></tr></thead><tbody>${itemsHtml}</tbody></table>
+        <div class="cart-summary"><h3 data-key="total">Total: ${convertPrice(total)}</h3><button class="btn-clear" id="clearCartBtn" data-key="clear_cart">Clear Cart</button><button class="btn-checkout" id="checkoutBtn" data-key="checkout">Proceed to Checkout</button></div>
+      `;
+      container.innerHTML = html;
+      document.querySelectorAll('.minus-btn').forEach(btn => btn.addEventListener('click', (e) => { e.stopPropagation(); updateQuantity(parseInt(btn.dataset.idx), -1); }));
+      document.querySelectorAll('.plus-btn').forEach(btn => btn.addEventListener('click', (e) => { e.stopPropagation(); updateQuantity(parseInt(btn.dataset.idx), 1); }));
+      document.querySelectorAll('.remove-btn').forEach(btn => btn.addEventListener('click', (e) => { e.stopPropagation(); removeItem(parseInt(btn.dataset.idx)); }));
+      document.getElementById('clearCartBtn')?.addEventListener('click', clearCart);
+      document.getElementById('checkoutBtn')?.addEventListener('click', () => { window.location.href = '/crud/checkout-stepper.html'; });
+    }
+
+    function updateQuantity(idx, delta) {
+      if (!cart[idx]) return;
+      const stock = getStockForItem(cart[idx].id);
+      let newQty = cart[idx].quantity + delta;
+      if (newQty <= 0) removeItem(idx);
+      else if (newQty > stock) { 
+        if (window.toast) toast.warning(`${translations[currentLanguage]?.only || 'Only'} ${stock} ${translations[currentLanguage]?.items_available || 'items available!'}`); 
+        return; 
+      }
+      else { 
+        cart[idx].quantity = newQty; 
+        localStorage.setItem('shotyCart', JSON.stringify(cart)); 
+        loadCart(); 
+        updateCartCount(); 
+        if (window.toast) toast.success(`${translations[currentLanguage]?.quantity_updated || 'Quantity updated to'} ${newQty}`); 
+      }
+    }
+    function removeItem(idx) { const itemName = cart[idx]?.name; cart.splice(idx, 1); localStorage.setItem('shotyCart', JSON.stringify(cart)); loadCart(); updateCartCount(); if (window.toast) toast.success(`${translations[currentLanguage]?.removed || 'Removed'} ${itemName} ${translations[currentLanguage]?.from_cart || 'from cart'}`); }
+    function clearCart() { if (confirm(translations[currentLanguage]?.clear_cart_confirm || 'Clear entire cart? This action cannot be undone.')) { localStorage.removeItem('shotyCart'); loadCart(); updateCartCount(); if (window.toast) toast.success(translations[currentLanguage]?.cart_cleared || 'Cart cleared'); } }
+    window.onCurrencyChange = () => { renderCart(); };
+    window.onLanguageChange = () => { renderCart(); };
+    async function init() { await loadProductsStock(); loadCart(); }
+    init();
+  </script>
+</body>
+</html>

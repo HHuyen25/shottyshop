@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title data-key="tracking_title">Order Tracking - SHOTTYSHOP</title>
+  <link rel="stylesheet" href="/style.css">
+  <style>
+    .tracking-container { max-width: 800px; margin: 2rem auto; padding: 0 1rem; }
+    .tracking-card { background: var(--bg-card, white); border-radius: 20px; padding: 2rem; box-shadow: 0 2px 8px var(--shadow, rgba(0,0,0,0.05)); border: 1px solid var(--border-color, #eee); }
+    .search-box { display: flex; gap: 0.5rem; margin-bottom: 2rem; flex-wrap: wrap; }
+    .search-box input { flex: 1; padding: 14px; border: 1px solid var(--border-color, #ddd); border-radius: 12px; font-size: 1rem; background: var(--bg-card, white); color: var(--text-primary, #0a0a0a); }
+    .search-box input:focus { outline: none; border-color: #0a0a0a; }
+    .search-box button { padding: 14px 28px; background: #0a0a0a; color: white; border: none; border-radius: 12px; cursor: pointer; font-weight: 600; transition: all 0.2s; }
+    .search-box button:hover { background: #333; transform: translateY(-2px); }
+    .order-info { background: var(--bg-body, #f8f9fa); padding: 1.5rem; border-radius: 16px; margin-bottom: 2rem; }
+    .order-info p { margin: 0.5rem 0; }
+    .timeline { position: relative; padding-left: 2rem; }
+    .timeline::before { content: ''; position: absolute; left: 0.75rem; top: 0; bottom: 0; width: 2px; background: var(--border-color, #e5e5e5); }
+    .timeline-item { position: relative; padding-bottom: 2rem; }
+    .timeline-item:last-child { padding-bottom: 0; }
+    .timeline-dot { position: absolute; left: -1.25rem; top: 0; width: 16px; height: 16px; border-radius: 50%; background: var(--border-color, #e5e5e5); border: 2px solid var(--bg-card, white); transition: all 0.3s; }
+    .timeline-item.completed .timeline-dot { background: #0a0a0a; box-shadow: 0 0 0 3px rgba(10,10,10,0.15); }
+    .timeline-item.active .timeline-dot { background: #0a0a0a; box-shadow: 0 0 0 3px rgba(10,10,10,0.15); animation: pulse 1.5s infinite; }
+    @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(10,10,10,0.4); } 70% { box-shadow: 0 0 0 8px rgba(10,10,10,0); } 100% { box-shadow: 0 0 0 0 rgba(10,10,10,0); } }
+    .timeline-content { background: var(--bg-body, #f8f9fa); padding: 0.75rem 1rem; border-radius: 12px; }
+    .timeline-title { font-weight: 600; margin-bottom: 0.25rem; color: var(--text-primary, #0a0a0a); }
+    .timeline-description { font-size: 0.8rem; color: var(--text-secondary, #666); }
+    .timeline-date { font-size: 0.7rem; color: #999; margin-top: 0.25rem; }
+    .status-badge { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 0.7rem; font-weight: 600; }
+    .status-pending { background: #f59e0b; color: white; }
+    .status-processing { background: #3b82f6; color: white; }
+    .status-shipped { background: #8b5cf6; color: white; }
+    .status-delivered { background: #10b981; color: white; }
+    .status-cancelled { background: #ef4444; color: white; }
+    .tracking-number { background: var(--bg-body, #f0f0f0); padding: 0.5rem; border-radius: 8px; font-family: monospace; margin-top: 0.5rem; }
+    .empty-state { text-align: center; padding: 3rem; color: var(--text-secondary, #999); }
+    body.dark-mode .tracking-number { background: #2a2a2a; }
+  </style>
+</head>
+<body>
+  <div id="header-placeholder"></div>
+  <div class="tracking-container">
+    <div class="tracking-card">
+      <h2 style="margin-bottom:1.5rem;" data-key="track_order">Track Your Order</h2>
+      <div class="search-box"><input type="text" id="orderIdInput" data-placeholder-key="enter_order_id"><button id="trackBtn" data-key="track">Track Order →</button></div>
+      <div id="trackingResult" style="display: none;"></div>
+      <div id="orderNotFound" class="empty-state" style="display: none;"><div style="font-size:3rem; margin-bottom:1rem;"></div><p data-key="order_not_found">Order not found. Please check your Order ID and try again.</p><p style="font-size:0.8rem; margin-top:0.5rem;" data-key="check_order_history">You can also check your <a href="order-history.html">Order History</a> if you're logged in.</p></div>
+      <div id="loginPrompt" class="empty-state" style="display: none;"><div style="font-size:3rem; margin-bottom:1rem;"></div><p data-key="login_to_view_orders">Please login to view your orders</p><a href="login.html" class="btn-primary" style="display:inline-block; margin-top:1rem;" data-key="login">Login</a></div>
+    </div>
+  </div>
+  <script src="/js/common.js"></script>
+  <script>
+    let allOrders = [];
+    async function loadOrders() { if (!currentUser) { document.getElementById('loginPrompt').style.display = 'block'; document.getElementById('trackingResult').style.display = 'none'; return false; } try { showLoading(); const res = await fetch(`${API_URL}/orders/user/${currentUser._id}`, { headers: { 'Authorization': `Bearer ${authToken}` } }); if (res.ok) { allOrders = await res.json(); return true; } } catch(e) { console.error(e); } finally { hideLoading(); } return false; }
+    function getStatusText(status) { const statusMap = { 'pending': translations[currentLanguage]?.status_pending || 'Order Placed', 'processing': translations[currentLanguage]?.status_processing || 'Processing', 'shipped': translations[currentLanguage]?.status_shipped || 'Shipped', 'delivered': translations[currentLanguage]?.status_delivered || 'Delivered', 'cancelled': translations[currentLanguage]?.status_cancelled || 'Cancelled' }; return statusMap[status] || status; }
+    function getTimelineSteps(order) { const steps = [{ status: 'pending', title: translations[currentLanguage]?.order_placed || 'Order Placed', description: translations[currentLanguage]?.order_placed_desc || 'Your order has been confirmed and is waiting for processing' }, { status: 'processing', title: translations[currentLanguage]?.processing || 'Processing', description: translations[currentLanguage]?.processing_desc || 'Your order is being prepared for shipment' }, { status: 'shipped', title: translations[currentLanguage]?.shipped || 'Shipped', description: translations[currentLanguage]?.shipped_desc || 'Your order is on the way to you' }, { status: 'delivered', title: translations[currentLanguage]?.delivered || 'Delivered', description: translations[currentLanguage]?.delivered_desc || 'Your order has been delivered' }]; const orderStatus = order.status; const orderDate = new Date(order.date); return steps.map((step, idx) => { let stepStatus = 'pending'; if (orderStatus === 'cancelled') stepStatus = 'cancelled'; else { const stepOrder = ['pending', 'processing', 'shipped', 'delivered']; const currentIdx = stepOrder.indexOf(orderStatus); if (idx < currentIdx) stepStatus = 'completed'; else if (idx === currentIdx) stepStatus = 'active'; else stepStatus = 'pending'; } let stepDate = null; if (stepStatus === 'completed' || stepStatus === 'active') { if (step.status === 'pending') stepDate = orderDate; else if (step.status === 'processing') stepDate = new Date(orderDate.getTime() + 86400000); else if (step.status === 'shipped') stepDate = new Date(orderDate.getTime() + 172800000); else if (step.status === 'delivered') stepDate = new Date(orderDate.getTime() + 259200000); } return { ...step, status: stepStatus, date: stepDate }; }); }
+    function renderTracking(order) { const container = document.getElementById('trackingResult'); const statusClass = `status-${order.status}`; const timelineSteps = getTimelineSteps(order); let timelineHtml = ''; timelineSteps.forEach(step => { let itemClass = 'timeline-item'; if (step.status === 'completed') itemClass += ' completed'; if (step.status === 'active') itemClass += ' active'; timelineHtml += `<div class="${itemClass}"><div class="timeline-dot"></div><div class="timeline-content"><div class="timeline-title">${step.title}</div><div class="timeline-description">${step.description}</div>${step.date ? `<div class="timeline-date">${step.date.toLocaleDateString('vi-VN')}</div>` : ''}</div></div>`; }); const trackingHtml = order.trackingNumber ? `<div class="tracking-number">${translations[currentLanguage]?.tracking_number || 'Tracking Number'}: <strong>${order.trackingNumber}</strong></div>` : ''; container.innerHTML = `<div class="order-info"><p><strong data-key="order_id">Order ID:</strong> #${order.orderId || order._id}</p><p><strong data-key="status">Status:</strong> <span class="status-badge ${statusClass}">${getStatusText(order.status)}</span></p><p><strong data-key="date">Order Date:</strong> ${new Date(order.date).toLocaleString('vi-VN')}</p><p><strong data-key="total">Total Amount:</strong> ${convertPrice(order.total)}</p><p><strong data-key="shipping_address">Shipping Address:</strong> ${order.shippingAddress?.street || 'N/A'}, ${order.shippingAddress?.district || ''}, ${order.shippingAddress?.city || ''}</p>${trackingHtml}</div><h3 style="margin-bottom:1rem;" data-key="order_timeline">Order Timeline</h3><div class="timeline">${timelineHtml}</div>${order.status === 'cancelled' ? `<div style="margin-top:1rem; padding:1rem; background:#fee2e2; border-radius:12px; color:#dc2626;" data-key="order_cancelled_note">This order has been cancelled. If you have any questions, please contact support.</div>` : ''}<div style="margin-top:1.5rem; text-align:center;"><a href="order-history.html" class="btn-secondary" style="padding:8px 16px; border-radius:8px; text-decoration:none;" data-key="back_to_history">← Back to Order History</a></div>`; container.style.display = 'block'; document.getElementById('orderNotFound').style.display = 'none'; document.getElementById('loginPrompt').style.display = 'none'; }
+    async function trackOrder() { const orderIdInput = document.getElementById('orderIdInput').value.trim(); if (!orderIdInput) { if (window.toast) toast.warning(translations[currentLanguage]?.enter_order_id || 'Please enter Order ID'); return; } const loaded = await loadOrders(); if (!loaded) { document.getElementById('loginPrompt').style.display = 'block'; return; } const order = allOrders.find(o => (o.orderId && o.orderId === orderIdInput) || o._id === orderIdInput || o._id.slice(-8) === orderIdInput); if (order) { renderTracking(order); } else { document.getElementById('trackingResult').style.display = 'none'; document.getElementById('orderNotFound').style.display = 'block'; if (window.toast) toast.error(translations[currentLanguage]?.order_not_found || 'Order not found'); } }
+    document.getElementById('trackBtn').addEventListener('click', trackOrder);
+    document.getElementById('orderIdInput').addEventListener('keypress', (e) => { if (e.key === 'Enter') trackOrder(); });
+    loadOrders();
+  </script>
+</body>
+</html>

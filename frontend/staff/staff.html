@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Staff Dashboard - SHOTTYSHOP</title>
+  <link rel="stylesheet" href="staff.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <img src="/image/logo.png" alt="SHOTTYSHOP" class="logo-img" onerror="this.style.display='none'">
+        <div>
+          <div class="logo-text">SHOTTYSHOP</div>
+          <div class="logo-sub">Staff Dashboard</div>
+        </div>
+      </div>
+      <nav class="sidebar-nav">
+        <a href="#" class="nav-item active" data-page="dashboard">Dashboard</a>
+        <a href="#" class="nav-item" data-page="products">Products</a>
+        <a href="#" class="nav-item" data-page="banners">Banners</a>
+        <a href="#" class="nav-item" data-page="orders">Orders</a>
+        <a href="#" class="nav-item" data-page="coupons">Coupons</a>
+        <a href="#" class="nav-item" data-page="posts">Posts</a>
+        <a href="#" class="nav-item" data-page="reports">Reports</a>
+      </nav>
+      <div class="sidebar-footer">
+        <a href="#" class="nav-item" id="backToShopBtn">Back to Shop</a>
+        <a href="#" class="nav-item" id="staffLogoutBtn">Logout</a>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <header class="top-header">
+        <button class="menu-toggle" id="menuToggle">Menu</button>
+        <div class="header-title">
+          <h1 id="pageTitle">Dashboard</h1>
+          <p>Welcome back, <span id="staffName">Staff</span></p>
+        </div>
+        <div class="header-actions">
+          <button class="theme-toggle" id="darkModeToggle">🌙</button>
+          <select class="lang-select" id="globalLanguageSelect">
+            <option value="vi">Vietnamese</option>
+            <option value="en">English</option>
+            <option value="ko">Korean</option>
+            <option value="ja">Japanese</option>
+          </select>
+          <select class="currency-select" id="globalCurrencySelect">
+            <option value="USD">USD</option>
+            <option value="VND">VND</option>
+          </select>
+        </div>
+      </header>
+
+      <div class="page-content" id="pageContent"></div>
+    </main>
+  </div>
+
+  <div id="globalLoading" class="loading-overlay" style="display: none;">
+    <div class="spinner"></div>
+  </div>
+
+  <script src="staff.js"></script>
+</body>
+</html>

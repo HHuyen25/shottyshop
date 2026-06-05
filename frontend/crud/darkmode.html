@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title data-key="darkmode_demo_title">Dark Mode Demo - SHOTTYSHOP</title>
+  <link rel="stylesheet" href="/style.css">
+  <style>
+    .demo-container { max-width: 1200px; margin: 2rem auto; padding: 0 1rem; }
+    .demo-header { text-align: center; margin-bottom: 2rem; }
+    .demo-header h1 { font-size: 2rem; margin-bottom: 0.5rem; }
+    .demo-header p { color: var(--text-secondary, #666); }
+    .demo-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.5rem; margin-bottom: 2rem; }
+    .demo-card { background: var(--bg-card, white); border-radius: 16px; padding: 1.5rem; box-shadow: 0 2px 8px var(--shadow, rgba(0,0,0,0.05)); transition: transform 0.2s, box-shadow 0.2s; cursor: pointer; }
+    .demo-card:hover { transform: translateY(-4px); box-shadow: 0 8px 24px var(--shadow, rgba(0,0,0,0.1)); }
+    .demo-card-icon { font-size: 3rem; margin-bottom: 1rem; }
+    .demo-card h3 { margin-bottom: 0.5rem; color: var(--text-primary, #1a1a1a); }
+    .demo-card p { color: var(--text-secondary, #666); font-size: 0.85rem; line-height: 1.5; }
+    .demo-controls { background: var(--bg-card, white); border-radius: 16px; padding: 1.5rem; margin-bottom: 2rem; text-align: center; }
+    .toggle-buttons { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; margin-top: 1rem; }
+    .toggle-btn { padding: 10px 24px; border: none; border-radius: 40px; cursor: pointer; font-weight: 600; transition: all 0.2s; }
+    .toggle-btn-light { background: #f0f0f0; color: #1a1a1a; }
+    .toggle-btn-dark { background: #1a1a1a; color: white; }
+    .toggle-btn-system { background: #e5e5e5; color: #333; }
+    .toggle-btn:hover { transform: translateY(-2px); }
+    .color-palette { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 1rem; margin-top: 1rem; }
+    .color-item { display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem; border-radius: 8px; background: var(--bg-card, white); }
+    .color-box { width: 40px; height: 40px; border-radius: 8px; }
+    .color-info { flex: 1; }
+    .color-name { font-size: 0.8rem; font-weight: 600; }
+    .color-value { font-size: 0.7rem; color: var(--text-secondary, #666); font-family: monospace; }
+    .back-link { display: inline-block; margin-top: 2rem; color: var(--text-secondary, #666); text-decoration: none; }
+    .back-link:hover { text-decoration: underline; }
+    @media (max-width: 768px) { .demo-grid { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <div id="header-placeholder"></div>
+  <div class="demo-container">
+    <div class="demo-header"><h1 data-key="darkmode_demo">Dark Mode Demo</h1><p data-key="darkmode_description">Experience SHOTTYSHOP in both light and dark themes</p></div>
+    <div class="demo-controls"><h3 data-key="theme_controls">Theme Controls</h3><div class="toggle-buttons"><button class="toggle-btn toggle-btn-light" id="lightModeBtn" data-key="light_mode">☀️ Light Mode</button><button class="toggle-btn toggle-btn-dark" id="darkModeBtn" data-key="dark_mode">🌙 Dark Mode</button><button class="toggle-btn toggle-btn-system" id="systemModeBtn" data-key="system_default">System Default</button></div></div>
+    <div class="demo-grid"><div class="demo-card"><div class="demo-card-icon"></div><h3 data-key="product_cards">Product Cards</h3><p data-key="product_cards_desc">Products automatically adapt to your theme preference with smooth transitions.</p></div><div class="demo-card"><div class="demo-card-icon">🛒</div><h3 data-key="shopping_cart">Shopping Cart</h3><p data-key="shopping_cart_desc">Cart items, buttons, and totals adjust colors for optimal readability.</p></div><div class="demo-card"><div class="demo-card-icon"></div><h3 data-key="user_profile">User Profile</h3><p data-key="user_profile_desc">Profile cards, form inputs, and avatars maintain consistency across themes.</p></div><div class="demo-card"><div class="demo-card-icon"></div><h3 data-key="admin_dashboard">Admin Dashboard</h3><p data-key="admin_dashboard_desc">Charts, tables, and statistics are fully optimized for dark mode.</p></div></div>
+    <div class="demo-controls"><h3 data-key="color_palette">Color Palette</h3><div class="color-palette"><div class="color-item"><div class="color-box" style="background: var(--bg-card); border: 1px solid var(--border-color);"></div><div class="color-info"><div class="color-name" data-key="background">Background</div><div class="color-value" id="bgColorValue">#ffffff</div></div></div><div class="color-item"><div class="color-box" style="background: var(--text-primary);"></div><div class="color-info"><div class="color-name" data-key="primary_text">Primary Text</div><div class="color-value" id="textColorValue">#1a1a1a</div></div></div><div class="color-item"><div class="color-box" style="background: var(--text-secondary);"></div><div class="color-info"><div class="color-name" data-key="secondary_text">Secondary Text</div><div class="color-value" id="secondaryColorValue">#666666</div></div></div><div class="color-item"><div class="color-box" style="background: var(--border-color);"></div><div class="color-info"><div class="color-name" data-key="border">Border</div><div class="color-value" id="borderColorValue">#e5e5e5</div></div></div></div></div>
+    <div style="text-align:center;"><a href="/index.html" class="back-link" data-key="back_to_shop">← Back to Shop</a></div>
+  </div>
+  <script src="/js/common.js"></script>
+  <script>
+    class DarkModeManager { constructor() { this.theme = localStorage.getItem('darkMode') || 'system'; this.init(); } getSystemTheme() { return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'enabled' : 'disabled'; } init() { if (this.theme === 'enabled') this.enable(); else if (this.theme === 'disabled') this.disable(); else { const systemTheme = this.getSystemTheme(); if (systemTheme === 'enabled') this.enable(); else this.disable(); } window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => { if (this.theme === 'system') e.matches ? this.enable() : this.disable(); }); this.updateColorDisplay(); } enable() { document.body.classList.add('dark-mode'); localStorage.setItem('darkMode', 'enabled'); this.theme = 'enabled'; this.updateColorDisplay(); if (window.toast) toast.info(translations[currentLanguage]?.dark_mode_enabled || 'Dark mode enabled'); const darkModeToggle = document.getElementById('darkModeToggle'); if (darkModeToggle) darkModeToggle.innerHTML = '☀️'; } disable() { document.body.classList.remove('dark-mode'); localStorage.setItem('darkMode', 'disabled'); this.theme = 'disabled'; this.updateColorDisplay(); if (window.toast) toast.info(translations[currentLanguage]?.light_mode_enabled || 'Light mode enabled'); const darkModeToggle = document.getElementById('darkModeToggle'); if (darkModeToggle) darkModeToggle.innerHTML = '🌙'; } setSystem() { localStorage.setItem('darkMode', 'system'); this.theme = 'system'; const systemTheme = this.getSystemTheme(); systemTheme === 'enabled' ? this.enable() : this.disable(); if (window.toast) toast.info(translations[currentLanguage]?.using_system || 'Using system preference'); } updateColorDisplay() { const bgColorValue = document.getElementById('bgColorValue'); const textColorValue = document.getElementById('textColorValue'); const secondaryColorValue = document.getElementById('secondaryColorValue'); const borderColorValue = document.getElementById('borderColorValue'); if (bgColorValue) bgColorValue.textContent = document.body.classList.contains('dark-mode') ? '#1e1e1e' : '#ffffff'; if (textColorValue) textColorValue.textContent = document.body.classList.contains('dark-mode') ? '#e0e0e0' : '#1a1a1a'; if (secondaryColorValue) secondaryColorValue.textContent = document.body.classList.contains('dark-mode') ? '#a0a0a0' : '#666666'; if (borderColorValue) borderColorValue.textContent = document.body.classList.contains('dark-mode') ? '#333333' : '#e5e5e5'; } }
+    const darkModeManager = new DarkModeManager();
+    document.getElementById('lightModeBtn')?.addEventListener('click', () => darkModeManager.disable());
+    document.getElementById('darkModeBtn')?.addEventListener('click', () => darkModeManager.enable());
+    document.getElementById('systemModeBtn')?.addEventListener('click', () => darkModeManager.setSystem());
+    window.toggleDarkMode = () => document.body.classList.contains('dark-mode') ? darkModeManager.disable() : darkModeManager.enable();
+  </script>
+</body>
+</html>

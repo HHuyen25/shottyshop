@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Order Confirmation | SHOTTYSHOP</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #0a0a0a;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    /* Decorative background elements */
+    body::before {
+      content: "♪";
+      font-size: 300px;
+      position: absolute;
+      bottom: -80px;
+      left: -80px;
+      opacity: 0.03;
+      color: white;
+      pointer-events: none;
+      font-family: monospace;
+    }
+
+    body::after {
+      content: "♫";
+      font-size: 260px;
+      position: absolute;
+      top: -60px;
+      right: -60px;
+      opacity: 0.03;
+      color: white;
+      pointer-events: none;
+      font-family: monospace;
+    }
+
+    .confirmation-card {
+      background: rgba(255, 255, 255, 0.98);
+      backdrop-filter: blur(0px);
+      border-radius: 48px;
+      padding: 2rem;
+      max-width: 560px;
+      width: 100%;
+      text-align: center;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.1);
+      animation: floatIn 0.6s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+      transition: transform 0.3s ease;
+    }
+
+    .confirmation-card:hover {
+      transform: translateY(-5px);
+    }
+
+    @keyframes floatIn {
+      0% {
+        opacity: 0;
+        transform: scale(0.96) translateY(20px);
+      }
+      100% {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+      }
+    }
+
+    /* Success icon with pulse animation */
+    .icon-wrapper {
+      margin-bottom: 1.5rem;
+    }
+    .success-icon {
+      width: 96px;
+      height: 96px;
+      background: #0a0a0a;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 12px 24px -8px rgba(16, 185, 129, 0.4);
+      animation: pop 0.5s ease-out 0.2s both;
+    }
+    @keyframes pop {
+      0% { transform: scale(0.6); opacity: 0; }
+      80% { transform: scale(1.1); }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    .success-icon span {
+      font-size: 56px;
+      color: white;
+      font-weight: 600;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    h1 {
+      font-size: 2rem;
+      font-weight: 700;
+      background: #141415;
+      background-clip: text;
+      -webkit-background-clip: text;
+      color: transparent;
+      margin-bottom: 0.5rem;
+      letter-spacing: -0.02em;
+    }
+
+    .subtitle {
+      color: #6e6e76;
+      font-weight: 500;
+      margin-bottom: 1.5rem;
+      font-size: 0.95rem;
+    }
+
+    /* Order ID card */
+    .order-id-card {
+      background: #fafafa;
+      border-radius: 24px;
+      padding: 1rem 1.5rem;
+      margin: 1.5rem 0;
+      border: 1px solid #e6e6e6;
+      transition: all 0.2s;
+    }
+    .order-id-label {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      font-weight: 600;
+      color: #6e6e76;
+      margin-bottom: 0.5rem;
+    }
+    .order-id-value {
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: #141415;
+      background: white;
+      display: inline-block;
+      padding: 0.2rem 1rem;
+      border-radius: 40px;
+      letter-spacing: 1px;
+      box-shadow: inset 0 0 0 1px #e6e6e6, 0 1px 2px rgba(0,0,0,0.05);
+    }
+
+    /* Order summary placeholders (could be extended) */
+    .info-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+      padding: 0.5rem 0;
+      border-bottom: 1px dashed #e6e6e6;
+    }
+    .info-label {
+      color: #6e6e76;
+      font-weight: 500;
+    }
+    .info-value {
+      font-weight: 600;
+      color: #141415;
+    }
+
+    .message-box {
+      background: #f4f4f5;
+      border-radius: 20px;
+      padding: 1rem;
+      margin: 1.5rem 0;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      border: 1px solid #d4d4d4;
+    }
+    .message-icon {
+      font-size: 1.5rem;
+    }
+    .message-text {
+      font-size: 0.85rem;
+      color: #0a0a0a;
+      text-align: left;
+      line-height: 1.4;
+      flex: 1;
+    }
+
+    /* Buttons */
+    .buttons {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-top: 1.5rem;
+    }
+    .btn-primary, .btn-secondary {
+      padding: 0.9rem 1.8rem;
+      border-radius: 60px;
+      text-decoration: none;
+      font-weight: 600;
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.9rem;
+    }
+    .btn-primary {
+      background: #0a0a0a;
+      color: white;
+      box-shadow: 0 4px 6px -2px rgba(0, 0, 0, 0.1);
+    }
+    .btn-primary:hover {
+      background: #141415;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 15px -4px rgba(0, 0, 0, 0.2);
+    }
+    .btn-secondary {
+      background: #f4f4f5;
+      color: #141415;
+      border: 1px solid #e6e6e6;
+    }
+    .btn-secondary:hover {
+      background: #e6e6e6;
+      transform: translateY(-2px);
+    }
+
+    /* Responsive */
+    @media (max-width: 480px) {
+      .confirmation-card {
+        padding: 1.5rem;
+        border-radius: 32px;
+      }
+      h1 { font-size: 1.8rem; }
+      .success-icon { width: 80px; height: 80px; }
+      .success-icon span { font-size: 46px; }
+      .btn-primary, .btn-secondary {
+        padding: 0.7rem 1.4rem;
+        font-size: 0.85rem;
+      }
+    }
+
+    /* Dark mode fallback (optional) */
+    @media (prefers-color-scheme: dark) {
+      .confirmation-card {
+        background: rgba(30, 34, 42, 0.98);
+        box-shadow: 0 25px 50px -12px rgba(0,0,0,0.8), 0 0 0 1px rgba(255,255,255,0.05);
+      }
+      h1 {
+        background: #d4d4d4;
+        background-clip: text;
+        -webkit-background-clip: text;
+      }
+      .subtitle, .info-label, .order-id-label { color: #a1a1aa; }
+      .order-id-card { background: #141415; border-color: #2a2a2d; }
+      .order-id-value { background: #0a0a0a; color: #f4f4f5; box-shadow: inset 0 0 0 1px #2a2a2d; }
+      .info-row { border-bottom-color: #2a2a2d; }
+      .info-value { color: #f4f4f5; }
+      .message-box { background: #0a0a0a; border-color: #0a0a0a; }
+      .message-text { color: #e6e6e6; }
+      .btn-secondary { background: #2a2a2d; color: #e6e6e6; border-color: #3a3a3e; }
+      .btn-secondary:hover { background: #3a3a3e; }
+    }
+  </style>
+</head>
+<body>
+  <div class="confirmation-card">
+    <div class="icon-wrapper">
+      <div class="success-icon">
+        <span>✓</span>
+      </div>
+    </div>
+    
+    <h1>Order confirmed</h1>
+    <div class="subtitle">Thank you for shopping with SHOTTYSHOP</div>
+
+    <div class="order-id-card">
+      <div class="order-id-label">Order Number</div>
+      <div class="order-id-value" id="orderIdDisplay">—</div>
+    </div>
+
+    <!-- Additional info (can be extended) -->
+    <div class="info-row">
+      <span class="info-label">Order date</span>
+      <span class="info-value" id="orderDateDisplay"></span>
+    </div>
+    <div class="info-row">
+      <span class="info-label">Payment method</span>
+      <span class="info-value">Cash on delivery / Bank transfer</span>
+    </div>
+
+    <div class="message-box">
+      <div class="message-icon"></div>
+      <div class="message-text">A confirmation email has been sent to your registered email address. We'll keep you updated on your order status.</div>
+    </div>
+
+    <div class="buttons">
+      <a href="order-history.html" class="btn-primary">
+        View order history
+      </a>
+      <a href="http://localhost:3000" class="btn-secondary">
+        Continue shopping
+      </a>
+    </div>
+  </div>
+
+  <script>
+    // Get order ID from URL or localStorage
+    const urlParams = new URLSearchParams(window.location.search);
+    let orderId = urlParams.get('orderId');
+    
+    if (!orderId) {
+      const lastOrderId = localStorage.getItem('lastOrderId');
+      if (lastOrderId) {
+        orderId = lastOrderId;
+        localStorage.removeItem('lastOrderId');
+      } else {
+        // Fallback for demo – but ideally orderId is always provided
+        orderId = 'SHOT-' + Math.floor(Math.random() * 1000000);
+      }
+    }
+    
+    // Display order ID with nice formatting
+    const displayElement = document.getElementById('orderIdDisplay');
+    if (displayElement) {
+      displayElement.textContent = orderId.startsWith('ORD') || orderId.startsWith('SHOT') ? orderId : `#${orderId}`;
+    }
+    
+    // Display current date
+    const dateElement = document.getElementById('orderDateDisplay');
+    if (dateElement) {
+      const now = new Date();
+      const formattedDate = now.toLocaleDateString('vi-VN', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+      dateElement.textContent = formattedDate;
+    }
+
+    // Optional: store orderId to session to prevent loss on page refresh (if needed)
+    if (orderId && !localStorage.getItem('lastOrderId')) {
+      sessionStorage.setItem('justConfirmedOrderId', orderId);
+    }
+  </script>
+</body>
+</html>

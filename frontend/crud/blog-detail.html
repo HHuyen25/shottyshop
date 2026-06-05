@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title data-key="blog_post_title">Blog Post - SHOTTYSHOP</title>
+  <link rel="stylesheet" href="/style.css">
+  <style>
+    .post-container { max-width: 820px; margin: 2rem auto; padding: 0 1.25rem; }
+    .back-link { display: inline-flex; align-items: center; gap: 6px; margin-bottom: 1rem; color: var(--text-secondary, #6e6e76); text-decoration: none; font-size: 0.88rem; font-weight: 500; transition: color 0.15s; }
+    .back-link:hover { color: var(--text-primary, #0a0a0a); }
+    .post-card { background: var(--bg-card, #fff); border-radius: 20px; padding: 2.5rem; box-shadow: 0 1px 2px var(--shadow, rgba(10,10,10,0.04)); border: 1px solid var(--border-color, #e6e6e6); }
+    .post-header { text-align: center; margin-bottom: 2rem; }
+    .post-category { display: inline-block; padding: 0.3rem 0.9rem; border-radius: 99px; font-size: 0.72rem; font-weight: 700; margin-bottom: 1.2rem; color: #fff; }
+    .post-title { font-size: 2.2rem; font-weight: 800; letter-spacing: -0.03em; margin-bottom: 1.2rem; color: var(--text-primary, #0a0a0a); line-height: 1.25; }
+    .post-meta { display: flex; justify-content: center; gap: 1.25rem; font-size: 0.8rem; color: var(--text-secondary, #6e6e76); flex-wrap: wrap; }
+    .post-featured-image { margin: 2rem 0; border-radius: 16px; overflow: hidden; background: var(--bg-body, #f4f4f5); }
+    .post-featured-image img { width: 100%; height: auto; display: block; }
+    .post-content { font-size: 1.05rem; line-height: 1.85; color: var(--text-primary, #1a1a1a); }
+    .post-content p { margin-bottom: 1.4rem; }
+    .post-content h2, .post-content h3 { margin: 1.8rem 0 1rem; font-weight: 700; letter-spacing: -0.01em; }
+    .post-content img { max-width: 100%; border-radius: 12px; margin: 1rem 0; }
+    .post-content a { color: #0a0a0a; text-decoration: underline; }
+    .post-embeds { margin: 2rem 0; padding-top: 1.5rem; border-top: 1px solid var(--border-color, #eee); }
+    .post-embeds h3 { font-weight: 700; }
+    .post-tags { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 2rem 0; padding-top: 1.5rem; border-top: 1px solid var(--border-color, #eee); }
+    .post-tag { padding: 0.3rem 0.8rem; background: var(--bg-body, #f4f4f5); border: 1px solid var(--border-color, #e6e6e6); border-radius: 99px; font-size: 0.75rem; color: var(--text-secondary, #6e6e76); }
+    .post-actions { display: flex; gap: 0.8rem; justify-content: center; margin: 2rem 0; }
+    .like-btn, .share-btn { display: inline-flex; align-items: center; gap: 6px; padding: 0.6rem 1.5rem; border: 1px solid var(--border-color, #d4d4d4); background: var(--bg-card, #fff); color: var(--text-primary, #0a0a0a); border-radius: 99px; cursor: pointer; font-weight: 600; font-size: 0.88rem; transition: all 0.2s; }
+    .like-btn:hover { background: #ef4444; color: #fff; border-color: #ef4444; }
+    .share-btn:hover { background: #0a0a0a; color: #fff; border-color: #0a0a0a; }
+    .related-posts { margin-top: 2.5rem; padding-top: 2rem; border-top: 1px solid var(--border-color, #eee); }
+    .related-posts h3 { margin-bottom: 1.2rem; font-weight: 700; }
+    .related-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 1rem; }
+    .related-item { padding: 1.1rem; background: var(--bg-body, #f7f7f8); border: 1px solid var(--border-color, #eee); border-radius: 12px; cursor: pointer; transition: transform 0.2s, border-color 0.2s; }
+    .related-item:hover { transform: translateY(-3px); border-color: #0a0a0a; }
+    .related-item h4 { font-size: 0.9rem; font-weight: 600; margin-bottom: 0.3rem; color: var(--text-primary, #0a0a0a); }
+    .comments-section { margin-top: 2.5rem; padding-top: 2rem; border-top: 1px solid var(--border-color, #eee); }
+    .comments-section h3 { font-weight: 700; margin-bottom: 1.2rem; }
+    .comment-form { margin-bottom: 2rem; }
+    .comment-form input, .comment-form textarea { width: 100%; padding: 11px 14px; margin-bottom: 0.8rem; border: 1px solid var(--border-color, #e6e6e6); border-radius: 10px; background: var(--bg-card, #fff); color: var(--text-primary, #0a0a0a); font-family: inherit; font-size: 0.9rem; outline: none; transition: border-color 0.15s; }
+    .comment-form input:focus, .comment-form textarea:focus { border-color: #0a0a0a; }
+    .comment-form .btn-primary { background: #0a0a0a; color: #fff; border: none; padding: 11px 22px; border-radius: 10px; font-weight: 600; cursor: pointer; transition: opacity 0.2s; }
+    .comment-form .btn-primary:hover { opacity: 0.85; }
+    .comment-item { padding: 1.1rem 0; border-bottom: 1px solid var(--border-color, #eee); }
+    .comment-author { font-weight: 600; margin-bottom: 0.2rem; color: var(--text-primary, #0a0a0a); }
+    .comment-date { font-size: 0.7rem; color: var(--text-secondary, #a1a1aa); margin-bottom: 0.5rem; }
+    .comment-content { color: var(--text-secondary, #4b4b52); line-height: 1.6; }
+    @media (max-width: 768px) { .post-title { font-size: 1.6rem; } .post-card { padding: 1.5rem; } }
+    /* Màu category (nội dung có ý nghĩa) */
+    .category-news { background: #3b82f6; color: #fff; }
+    .category-event { background: #f59e0b; color: #fff; }
+    .category-guide { background: #10b981; color: #fff; }
+    .category-review { background: #8b5cf6; color: #fff; }
+    .category-announcement { background: #ef4444; color: #fff; }
+    .category-update { background: #06b6d4; color: #fff; }
+  </style>
+</head>
+<body>
+  <div id="header-placeholder"></div>
+  <div class="post-container">
+    <a href="blog.html" class="back-link" data-key="back_to_blog">← Back to Blog</a>
+    <div id="postContent" class="post-card"><div style="text-align:center; padding:50px;" data-key="loading_post">Loading post...</div></div>
+  </div>
+  <script src="/js/common.js"></script>
+  <script>
+    let currentPost = null;
+    function getCategoryClass(category) { const classes = { 'news': 'category-news', 'event': 'category-event', 'guide': 'category-guide', 'review': 'category-review', 'announcement': 'category-announcement', 'update': 'category-update' }; return classes[category] || 'category-news'; }
+    function getCategoryName(category) { const names = { 'news': translations[currentLanguage]?.news || 'News', 'event': translations[currentLanguage]?.event || 'Event', 'guide': translations[currentLanguage]?.guide || 'Guide', 'review': translations[currentLanguage]?.review || 'Review', 'announcement': translations[currentLanguage]?.announcement || 'Announcement', 'update': translations[currentLanguage]?.update || 'Update' }; return names[category] || category; }
+    async function loadPost() { const urlParams = new URLSearchParams(window.location.search); const slug = urlParams.get('slug'); if (!slug) { document.getElementById('postContent').innerHTML = '<div style="text-align:center; padding:50px;" data-key="post_not_found">Post not found</div>'; return; } try { showLoading(); const res = await fetch(`${API_URL}/posts/${slug}`); if (!res.ok) throw new Error('Post not found'); currentPost = await res.json(); if (!currentUser && typeof checkLoginStatus === 'function') { try { await checkLoginStatus(); } catch(_) {} } renderPost(); if (typeof translatePage === 'function') translatePage(); hideLoading(); } catch(e) { console.error(e); hideLoading(); document.getElementById('postContent').innerHTML = '<div style="text-align:center; padding:50px;" data-key="post_not_found">Post not found</div>'; } }
+    function renderPost() { const container = document.getElementById('postContent'); const categoryClass = getCategoryClass(currentPost.category); const categoryName = getCategoryName(currentPost.category); const imageUrl = getImageUrl(currentPost.featuredImage) || 'https://picsum.photos/800/400'; const date = new Date(currentPost.publishedAt || currentPost.createdAt).toLocaleDateString('vi-VN'); const tagsHtml = currentPost.tags?.map(tag => `<span class="post-tag">#${escapeHtml(tag)}</span>`).join('') || ''; let relatedHtml = ''; if (currentPost.relatedPosts && currentPost.relatedPosts.length > 0) { relatedHtml = `<div class="related-posts"><h3 data-key="related_posts">Related Posts</h3><div class="related-grid">${currentPost.relatedPosts.map(post => `<div class="related-item" data-slug="${post.slug}"><h4>${escapeHtml(post.title)}</h4><small style="color:#999;">${new Date(post.publishedAt).toLocaleDateString()}</small></div>`).join('')}</div></div>`; } const commentsHtml = currentPost.comments?.map(comment => `<div class="comment-item"><div class="comment-author">${escapeHtml(comment.userName)}</div><div class="comment-date">${new Date(comment.createdAt).toLocaleString()}</div><div class="comment-content">${escapeHtml(comment.content)}</div></div>`).join('') || `<p style="color:#999;" data-key="no_comments">No comments yet. Be the first to comment!</p>`; container.innerHTML = `<div class="post-header"><span class="post-category ${categoryClass}">${categoryName}</span><h1 class="post-title">${escapeHtml(currentPost.title)}</h1><div class="post-meta"><span>${escapeHtml(currentPost.author)}</span><span>${date}</span><span>${currentPost.views || 0} ${translations[currentLanguage]?.views || 'views'}</span><span>❤️ ${currentPost.likes || 0} ${translations[currentLanguage]?.likes || 'likes'}</span></div></div><div class="post-featured-image"><img src="${imageUrl}" onerror="this.src='https://picsum.photos/800/400'" alt="${escapeHtml(currentPost.title)}"></div><div class="post-content">${currentPost.content}</div>${(function(){const s=currentPost.socialLinks||{};const l=[s.youtube,s.tiktok,s.facebook,s.zalo,...(currentPost.videoLinks||[])].filter(Boolean);const e=(typeof renderEmbeds==='function')?renderEmbeds(l):'';return e?`<div class="post-embeds"><h3 style="margin:1.5rem 0 1rem;">Video & Bài viết liên kết</h3>${e}</div>`:'';})()}${tagsHtml ? `<div class="post-tags">${tagsHtml}</div>` : ''}<div class="post-actions"><button class="like-btn" id="likeBtn">❤️ ${translations[currentLanguage]?.like || 'Like'} (${currentPost.likes || 0})</button><button class="share-btn" id="shareBtn" data-key="share">Share</button></div>${relatedHtml}<div class="comments-section"><h3 data-key="comments">Comments (${currentPost.comments?.length || 0})</h3><div class="comment-form" id="commentForm"><input type="text" id="commentName" data-placeholder-key="your_name" ${currentUser ? `value="${escapeHtml(currentUser.name)}"` : ''}><input type="email" id="commentEmail" data-placeholder-key="email" ${currentUser ? `value="${escapeHtml(currentUser.email)}"` : ''}><textarea id="commentContent" rows="3" data-placeholder-key="write_comment"></textarea><button id="submitCommentBtn" class="btn-primary" data-key="post_comment">Post Comment</button></div><div id="commentsList">${commentsHtml}</div></div>`; document.getElementById('likeBtn')?.addEventListener('click', likePost); document.getElementById('shareBtn')?.addEventListener('click', sharePost); document.getElementById('submitCommentBtn')?.addEventListener('click', submitComment); document.querySelectorAll('.related-item').forEach(item => { item.addEventListener('click', () => { window.location.href = `/crud/blog-detail.html?slug=${item.dataset.slug}`; }); }); }
+    async function likePost() {
+      const liked = JSON.parse(localStorage.getItem('likedPosts') || '[]');
+      if (liked.includes(currentPost._id)) { if (window.toast) toast.info(translations[currentLanguage]?.already_liked || 'Bạn đã thích bài viết này rồi'); return; }
+      try {
+        const res = await fetch(`${API_URL}/posts/${currentPost._id}/like`, { method: 'POST' });
+        const data = await res.json();
+        currentPost.likes = data.likes;
+        liked.push(currentPost._id); localStorage.setItem('likedPosts', JSON.stringify(liked));
+        const likeBtn = document.getElementById('likeBtn');
+        if (likeBtn) { likeBtn.innerHTML = `❤️ ${translations[currentLanguage]?.like || 'Like'} (${data.likes})`; likeBtn.style.background = '#ef4444'; likeBtn.style.color = '#fff'; likeBtn.style.borderColor = '#ef4444'; }
+        if (window.toast) toast.success(translations[currentLanguage]?.thanks_for_liking || 'Cảm ơn bạn đã thích!');
+      } catch(e) { if (window.toast) toast.error(translations[currentLanguage]?.error || 'Không thể thích bài viết'); }
+    }
+    function sharePost() { if (navigator.share) { navigator.share({ title: currentPost.title, url: window.location.href }); } else { navigator.clipboard.writeText(window.location.href); if (window.toast) toast.success(translations[currentLanguage]?.link_copied || 'Link copied to clipboard!'); } }
+    // Thay thế toàn bộ hàm submitComment
+async function submitComment() {
+  const userName = document.getElementById('commentName').value.trim();
+  const userEmail = document.getElementById('commentEmail').value.trim();
+  const content = document.getElementById('commentContent').value.trim();
+  
+  // Validation
+  if (!userName || !userEmail || !content) {
+    if (window.toast) toast.error(translations[currentLanguage]?.fill_fields || 'Vui lòng điền đầy đủ thông tin');
+    return;
+  }
+  
+  if (!userEmail.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
+    if (window.toast) toast.error(translations[currentLanguage]?.valid_email || 'Email không hợp lệ');
+    return;
+  }
+  
+  if (content.length < 5) {
+    if (window.toast) toast.error(translations[currentLanguage]?.comment_too_short || 'Bình luận phải có ít nhất 5 ký tự');
+    return;
+  }
+  
+  try {
+    showLoading();
+    const res = await fetch(`${API_URL}/posts/${currentPost.slug}/comments`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userName, userEmail, content })
+    });
+    
+    if (res.ok) {
+      if (window.toast) toast.success(translations[currentLanguage]?.comment_added || 'Đã thêm bình luận!');
+      document.getElementById('commentContent').value = '';
+      await loadPost(); // Reload để hiển thị comment mới
+    } else {
+      const err = await res.json();
+      if (window.toast) toast.error(err.error || translations[currentLanguage]?.error || 'Không thể thêm bình luận');
+    }
+  } catch(e) {
+    console.error(e);
+    if (window.toast) toast.error(translations[currentLanguage]?.error || 'Lỗi kết nối');
+  } finally {
+    hideLoading();
+  }
+}
+    loadPost();
+  </script>
+</body>
+</html>
