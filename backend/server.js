@@ -1,6 +1,8 @@
 require('dotenv').config();
 const dns = require('dns');
-dns.setDefaultResultOrder('ipv4first');
+if (typeof dns.setDefaultResultOrder === 'function') {
+  dns.setDefaultResultOrder('ipv4first');
+}
 
 const express = require('express');
 const mongoose = require('mongoose');
@@ -67,7 +69,10 @@ if (!mongoURI && isProduction) {
   process.exit(1);
 }
 
-mongoose.connect(mongoURI || 'mongodb://localhost:27017/shottyshop')
+// Kết nối trực tiếp bằng chuỗi cấu hình hoặc fallback về cấu hình mặc định của bạn nếu thiếu biến env
+const targetURI = mongoURI || 'mongodb+srv://dbshottyshop:HHuyen2511@huyen.tybfsjr.mongodb.net/shottyshop?retryWrites=true&w=majority';
+
+mongoose.connect(targetURI)
   .then(() => console.log('Successfully connected to MongoDB.'))
   .catch(err => {
     console.error('Database connection error:', err.message);
@@ -81,10 +86,10 @@ const loadRouterSafely = (apiPath, routerModulePath) => {
     if (typeof routerModule === 'function' || (routerModule && typeof routerModule.use === 'function')) {
       app.use(apiPath, routerModule);
     } else {
-      console.error(`🚨 CẢNH BÁO ROUTER: File "${routerModulePath}" export sai định dạng (Cần xuất module.exports = router). Bỏ quan để tránh sập server.`);
+      console.error(`🚨 CẢNH BÁO ROUTER: File "${routerModulePath}" export sai định dạng. Bỏ qua để tránh sập.`);
     }
   } catch (error) {
-    console.error(`🚨 LỖI NẠP FILE: Không thể load file "${routerModulePath}". Chi tiết lỗi:`, error.message);
+    console.error(`🚨 LỖI NẠP FILE: Không thể load file "${routerModulePath}".`, error.message);
   }
 };
 
@@ -102,7 +107,7 @@ loadRouterSafely('/api/wishlist', './routes/wishlist');
 loadRouterSafely('/api/posts', './routes/post');
 loadRouterSafely('/api/notifications', './routes/notifications');
 
-// --- XỬ LÝ ĐƯỜNG DẪN STATIC FILE & FRONTEND ---
+// Thư mục static
 const uploadsPath = path.join(__dirname, '..', 'image');
 if (!fs.existsSync(uploadsPath)) {
   fs.mkdirSync(uploadsPath, { recursive: true });
@@ -110,14 +115,7 @@ if (!fs.existsSync(uploadsPath)) {
 app.use('/image', express.static(uploadsPath));
 
 const frontendPath = path.join(__dirname, '..', 'frontend');
-app.use(express.static(frontendPath, {
-  maxAge: isProduction ? '1d' : 0,
-  setHeaders: (res, filePath) => {
-    if (path.extname(filePath) === '.html') {
-      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-    }
-  }
-}));
+app.use(express.static(frontendPath));
 
 app.get('*', (req, res) => { 
   if (req.path.startsWith('/api/')) return res.status(404).json({ error: 'API endpoint not found' }); 
@@ -126,20 +124,11 @@ app.get('*', (req, res) => {
   else res.status(404).send('Page not found'); 
 });
 
-// Điều hướng lỗi
-app.use((req, res) => { 
-  if (req.path.startsWith('/api/')) res.status(404).json({ error: 'API endpoint not found' }); 
-  else res.status(404).sendFile(path.join(frontendPath, '404.html'), err => { if (err) res.status(404).send('Page not found'); }); 
-});
-
 app.use((err, req, res, next) => { 
   console.error('Server error:', err.message); 
-  if (err.code === 'LIMIT_FILE_SIZE') return res.status(400).json({ error: 'File too large. Max size: 50MB' }); 
-  if (err.name === 'ValidationError') return res.status(400).json({ error: err.message }); 
-  if (err.name === 'JsonWebTokenError') return res.status(401).json({ error: 'Invalid token' }); 
-  res.status(err.status || 500).json({ error: isProduction ? 'Internal server error' : err.message }); 
+  res.status(err.status || 500).json({ error: 'Internal server error' }); 
 });
 
 app.listen(PORT, () => { 
-  console.log(`Server is running on port ${PORT} in ${isProduction ? 'production' : 'development'} mode`); 
+  console.log(`Server is running on port ${PORT}`); 
 });
