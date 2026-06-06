@@ -202,6 +202,8 @@ function convertPrice(usdPrice) {
 
 function getImageUrl(path) {
   if (!path) return null;
+  // Chuẩn hóa dữ liệu cũ: bỏ host localhost/127.0.0.1 -> đường dẫn tương đối (để chạy đúng trên Render)
+  path = path.replace(/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?/i, '');
   if (path.startsWith('http://') || path.startsWith('https://')) return path;
   if (path.startsWith('/image/')) return `${path}`;
   if (path.startsWith('/uploads/')) return `${path.replace('/uploads', '/image')}`;
