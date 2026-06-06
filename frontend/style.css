@@ -214,14 +214,14 @@ body.dark-mode .top-bar {
   position: sticky;
   /* top sẽ được set bằng JS qua biến --header-height */
   top: var(--header-height, 0px);
-  z-index: 99;
+  z-index: 100;
 }
 
 .category-nav.sticky {
   position: sticky;
   top: var(--header-height, 0px);
   background: #fafafa;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 12px rgba(0,0,0,0.08);
 }
 
 .category-nav-container {
@@ -237,11 +237,12 @@ body.dark-mode .top-bar {
   background: none;
   border: none;
   font-size: 0.85rem;
-  font-weight: 500;
+  font-weight: 600;
   color: #666;
   cursor: pointer;
-  padding: 0.3rem 0;
+  padding: 0.4rem 0;
   transition: all 0.2s;
+  letter-spacing: 0.5px;
 }
 
 .category-btn.active {
@@ -336,11 +337,12 @@ body.dark-mode .top-bar {
   transform: scale(1.05);
 }
 
+/* ==================== ĐÃ SỬA LỖI NÚT ĐIỀU HƯỚNG SLIDER TẠI ĐÂY ==================== */
 .slider-btn {
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
-  background: rgba(255,255,255,0.3);
+  background: rgba(255,255,255,0.4);
   backdrop-filter: blur(5px);
   color: white;
   border: none;
@@ -348,13 +350,18 @@ body.dark-mode .top-bar {
   height: 50px;
   border-radius: 50%;
   font-size: 24px;
-  cursor: pointer;
-  z-index: 10;
-  transition: background 0.2s;
+  cursor: pointer !important;
+  z-index: 50; /* Đưa z-index lên cao để đè hẳn lên video/ảnh nền slide */
+  transition: background 0.2s, transform 0.2s;
+  pointer-events: auto !important; /* Đảm bảo chuột luôn phản hồi click */
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .slider-btn:hover {
-  background: rgba(255,255,255,0.5);
+  background: rgba(255,255,255,0.6);
+  transform: translateY(-50%) scale(1.05);
 }
 
 .prev { left: 20px; }
@@ -367,7 +374,7 @@ body.dark-mode .top-bar {
   transform: translateX(-50%);
   display: flex;
   gap: 12px;
-  z-index: 10;
+  z-index: 50; /* Tăng đồng bộ với slider-btn */
 }
 
 .dot {
@@ -399,16 +406,18 @@ body.dark-mode .top-bar {
 }
 
 .product-card {
+  position: relative;
   background: white;
   cursor: pointer;
-  transition: transform 0.2s, box-shadow 0.2s;
-  border-radius: 12px;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  border-radius: 16px;
   overflow: hidden;
+  border: 1px solid #f0f0f0;
 }
 
 .product-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+  transform: translateY(-6px);
+  box-shadow: 0 12px 24px rgba(0,0,0,0.1);
 }
 
 .product-card img {
@@ -459,16 +468,20 @@ body.dark-mode .top-bar {
   background: #1a1a1a;
   color: white;
   border: none;
-  padding: 0.6rem;
-  border-radius: 6px;
-  font-weight: 500;
+  padding: 0.7rem;
+  border-radius: 40px;
+  font-weight: 600;
   cursor: pointer;
   margin-top: 0.5rem;
-  transition: background 0.2s;
+  transition: background 0.2s, transform 0.1s;
 }
 
 .add-to-cart:hover {
   background: #333;
+}
+
+.add-to-cart:active {
+  transform: scale(0.98);
 }
 
 /* Modal Styles */
@@ -857,7 +870,6 @@ footer {
 
 /* Header placeholder */
 #header-placeholder {
-  /* không cần position sticky nữa vì header đã fixed */
   height: var(--header-height, 0px);
 } 
 
@@ -1088,9 +1100,6 @@ body.dark-mode .cart-modal-item-quantity button {
 .wishlist-icon.active {
   color: #ff4444;
 }
-.product-card {
-  position: relative;
-}
 
 /* Search Wrapper - Modern Design */
 .search-wrapper {
@@ -1194,93 +1203,6 @@ body.dark-mode .search-button:hover {
 
 body.dark-mode .dark-mode-toggle:hover {
   background: #333;
-}
-
-/* Category nav styling (bổ sung responsive) */
-.category-nav {
-  background: #fafafa;
-  border-bottom: 1px solid #e5e5e5;
-  position: sticky;
-  top: var(--header-height, 0px);
-  z-index: 100;
-}
-
-.category-nav.sticky {
-  position: sticky;
-  top: var(--header-height, 0px);
-  box-shadow: 0 2px 12px rgba(0,0,0,0.08);
-}
-
-.category-nav-container {
-  display: flex;
-  justify-content: center;
-  gap: 2rem;
-  padding: 0.8rem 2rem;
-  max-width: 1400px;
-  margin: 0 auto;
-}
-
-.category-btn {
-  background: none;
-  border: none;
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: #666;
-  cursor: pointer;
-  padding: 0.4rem 0;
-  transition: all 0.2s;
-  letter-spacing: 0.5px;
-}
-
-.category-btn.active {
-  color: #000;
-  border-bottom: 2px solid #000;
-}
-
-.category-btn:hover {
-  color: #000;
-}
-
-body.dark-mode .category-btn {
-  color: #aaa;
-}
-
-body.dark-mode .category-btn.active {
-  color: #fff;
-  border-bottom-color: #fff;
-}
-
-/* Product card enhancements */
-.product-card {
-  background: white;
-  cursor: pointer;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-  border-radius: 16px;
-  overflow: hidden;
-  border: 1px solid #f0f0f0;
-}
-
-.product-card:hover {
-  transform: translateY(-6px);
-  box-shadow: 0 12px 24px rgba(0,0,0,0.1);
-}
-
-.product-info {
-  padding: 1rem;
-}
-
-.add-to-cart {
-  background: #1a1a1a;
-  color: white;
-  border: none;
-  padding: 0.7rem;
-  border-radius: 40px;
-  font-weight: 600;
-  transition: background 0.2s, transform 0.1s;
-}
-
-.add-to-cart:active {
-  transform: scale(0.98);
 }
 
 /* Responsive adjustments */
