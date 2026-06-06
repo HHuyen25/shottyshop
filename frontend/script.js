@@ -89,7 +89,12 @@ function renderProducts(category) {
   const container = document.getElementById('productList');
   if (!container) return;
   
-  const allProducts = window.products || [];
+  // Khôi phục logic hiển thị sản phẩm ban đầu để không lỗi hình ảnh
+  let allProducts = window.products || [];
+  
+  // Tùy chỉnh: thêm logic kiểm tra URL ảnh sản phẩm nếu cần thiết
+  // Ví dụ: if (product.image && !product.image.startsWith('http')) product.image = 'http://' + product.image;
+
   let filtered = category !== 'all' ? allProducts.filter(p => p.category === category) : allProducts;
   
   if (!filtered.length) {
@@ -100,14 +105,15 @@ function renderProducts(category) {
   let html = '';
   filtered.forEach(p => {
     const priceDisplay = convertPrice(p.price);
-    let img = p.image && p.image.trim() !== '' ? getImageUrl(p.image) : 'https://picsum.photos/300/300?random=1';
+    // Sử dụng đường dẫn ảnh gốc từ dữ liệu
+    let img = p.image && p.image.trim() !== '' ? p.image : 'path/to/default/image.jpg'; 
     const isWished = wishlistMap[p._id] || false;
     const wishIcon = isWished ? '❤️' : '🤍';
     const wishClass = isWished ? 'active' : '';
     html += `
       <div class="product-card" data-id="${p._id}">
         <div class="wishlist-icon ${wishClass}" data-id="${p._id}">${wishIcon}</div>
-        <img src="${img}" alt="${escapeHtml(p.name)}" onerror="this.src='https://picsum.photos/300/300?random=2'">
+        <img src="${img}" alt="${escapeHtml(p.name)}" onerror="this.src='path/to/backup/image.jpg'">
         <div class="product-info">
           <div class="product-name">${escapeHtml(p.name)}</div>
           <div class="category-badge">${escapeHtml(p.category).toUpperCase()}</div>
@@ -137,15 +143,16 @@ function renderProducts(category) {
   });
 }
 
-// ==================== HELPER ====================
+// ==================== HELPER: thẻ sản phẩm dùng chung ====================
 function productCardHTML(p) {
   const priceDisplay = convertPrice(p.price);
-  const img = p.image && p.image.trim() !== '' ? getImageUrl(p.image) : 'https://picsum.photos/300/300?random=1';
+  // Sử dụng đường dẫn ảnh gốc từ dữ liệu
+  const img = p.image && p.image.trim() !== '' ? p.image : 'path/to/default/image.jpg';
   const isWished = wishlistMap[p._id] || false;
   return `
     <div class="product-card" data-id="${p._id}">
       <div class="wishlist-icon ${isWished ? 'active' : ''}" data-id="${p._id}">${isWished ? '❤️' : '🤍'}</div>
-      <img src="${img}" alt="${escapeHtml(p.name)}" onerror="this.src='https://picsum.photos/300/300?random=2'">
+      <img src="${img}" alt="${escapeHtml(p.name)}" onerror="this.src='path/to/backup/image.jpg'">
       <div class="product-info">
         <div class="product-name">${escapeHtml(p.name)}</div>
         <div class="category-badge">${escapeHtml(p.category).toUpperCase()}</div>
@@ -163,12 +170,14 @@ function bindCards(scope) {
   scope.querySelectorAll('.wishlist-icon').forEach(icon => { icon.addEventListener('click', (e) => { e.stopPropagation(); toggleWishlist(icon.dataset.id, icon); }); });
 }
 
-// ==================== HOME SECTIONS ====================
+// ==================== HOME: nổi bật + theo thành viên ====================
 const HOME_MEMBERS = ['OHYUL', 'RYUL', 'WOOJIN', 'LOUIS'];
+
 const WS_PER_PAGE = 4;
 
 function wsCardHTML(p) {
-  const img = p.image && p.image.trim() ? getImageUrl(p.image) : 'https://picsum.photos/300/300?random=1';
+  // Sử dụng đường dẫn ảnh gốc từ dữ liệu
+  const img = p.image && p.image.trim() ? p.image : 'path/to/default/image.jpg';
   const isWished = wishlistMap[p._id] || false;
   let tags = '';
   if (p.featured) tags += '<span class="ws-tag tag-exclusive">EXCLUSIVE</span>';
@@ -177,7 +186,7 @@ function wsCardHTML(p) {
   return `
     <div class="ws-card" data-id="${p._id}">
       <div class="ws-img">
-        <img src="${img}" onerror="this.src='https://picsum.photos/300/300?random=2'" alt="${escapeHtml(p.name)}">
+        <img src="${img}" onerror="this.src='path/to/backup/image.jpg'" alt="${escapeHtml(p.name)}">
         <span class="ws-wish ${isWished ? 'active' : ''}" data-id="${p._id}">${isWished ? '❤️' : '🤍'}</span>
       </div>
       <div class="ws-name">${escapeHtml(p.name)}</div>
@@ -242,11 +251,13 @@ function renderHomeSections() {
   sections.forEach((s, i) => setupWsSection(wrap.querySelector(`.ws-section[data-idx="${i}"]`), s.items));
 }
 
+// Khi vào index với ?search= -> hiển thị kết quả tìm kiếm
 function applySearchFromURL() {
   const term = (new URLSearchParams(location.search).get('search') || '').trim();
   if (!term) return false;
   const input = document.getElementById('searchInput');
   if (input) input.value = term;
+  // Khi tìm kiếm: hiện lại nút ALL (để quay về xem tất cả / thoát tìm kiếm)
   const allBtn = document.getElementById('catAllBtn');
   if (allBtn) allBtn.style.display = '';
   const t = term.toLowerCase();
@@ -292,12 +303,13 @@ function shopNowHandler(e) {
   if (link && link !== '#') window.location.href = link;
 }
 
-// ==================== SLIDER (ĐÃ CHỈNH 3S & KHÔNG RE-CLONE DOM) ====================
 function renderSlider() {
   const slider = document.getElementById('slider'), dotsContainer = document.getElementById('sliderDots');
   if (!slider) return;
   
+  // Khôi phục logic hiển thị banner ban đầu để không lỗi hình ảnh
   const allBanners = window.banners || [];
+  
   if (!allBanners.length) { renderSliderFallback(); return; }
   
   slider.innerHTML = ''; 
@@ -306,7 +318,8 @@ function renderSlider() {
   allBanners.forEach((b, idx) => {
     const slide = document.createElement('div'); 
     slide.className = `slide ${idx === 0 ? 'active' : ''}`;
-    const mediaUrl = getImageUrl(b.image);
+    // Sử dụng đường dẫn ảnh gốc từ dữ liệu
+    const mediaUrl = b.image;
     const isVideo = b.mediaType === 'video' || (mediaUrl && mediaUrl.match(/\.(mp4|webm|mov)$/i));
     
     if (isVideo) {
@@ -315,17 +328,18 @@ function renderSlider() {
       slide.innerHTML = `<div class="slide-bg" style="background: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.4)), url('${mediaUrl}'); background-size: cover; background-position: center;"></div><div class="slide-content"><h1>${escapeHtml(b.title)}</h1><p>${escapeHtml(b.subtitle)}</p><button class="shop-now" data-link="${b.buttonLink}">${escapeHtml(b.buttonText) || (translations[currentLanguage]?.shop_now || 'SHOP NOW →')}</button></div>`;
     }
     slider.appendChild(slide);
-    
     const dot = document.createElement('span'); 
     dot.className = `dot ${idx === 0 ? 'active' : ''}`; 
-    dot.addEventListener('click', () => { goToSlide(idx); resetAutoSlide(); }); 
+    dot.addEventListener('click', () => {
+      goToSlide(idx);
+      resetAutoSlide(); // Thêm hàm để reset bộ đếm thời gian
+    }); 
     dotsContainer.appendChild(dot);
   });
   
   slides = document.querySelectorAll('.slide'); 
   dots = document.querySelectorAll('.dot'); 
   startAutoSlide();
-  
   document.querySelectorAll('.shop-now').forEach(btn => {
     btn.removeEventListener('click', shopNowHandler);
     btn.addEventListener('click', shopNowHandler);
@@ -344,24 +358,22 @@ function renderSliderFallback() {
 
 function goToSlide(index) { 
   if (!slides.length) return; 
-  if (index < 0) currentSlide = slides.length - 1; 
+  if (index < 0) currentSlide = slides.length-1; 
   else if (index >= slides.length) currentSlide = 0; 
   else currentSlide = index; 
-  slides.forEach((s, i) => s.classList.toggle('active', i === currentSlide)); 
-  dots.forEach((d, i) => d.classList.toggle('active', i === currentSlide)); 
+  slides.forEach((s,i)=>s.classList.toggle('active',i===currentSlide)); 
+  dots.forEach((d,i)=>d.classList.toggle('active',i===currentSlide)); 
 }
 
-function nextSlide() { goToSlide(currentSlide + 1); } 
-function prevSlide() { goToSlide(currentSlide - 1); } 
+function nextSlide() { goToSlide(currentSlide+1); } 
+function prevSlide() { goToSlide(currentSlide-1); } 
 
-// Cấu hình chuyển slide tự động sau 3 giây (3000ms)
+// Cập nhật: đặt slideInterval và thay đổi thời gian thành 3 giây (3000ms)
 function startAutoSlide() { 
-  if (slideInterval) clearInterval(slideInterval); 
-  slideInterval = setInterval(nextSlide, 3000); 
+  if(slideInterval) clearInterval(slideInterval); 
+  slideInterval = setInterval(nextSlide,3000); 
 } 
-function stopAutoSlide() { 
-  if (slideInterval) clearInterval(slideInterval); 
-}
+function stopAutoSlide() { if(slideInterval) clearInterval(slideInterval); }
 function resetAutoSlide() {
   stopAutoSlide();
   startAutoSlide();
@@ -370,8 +382,8 @@ function resetAutoSlide() {
 // ==================== CATEGORY FILTER ====================
 function setupCategoryFilter() {
   document.querySelectorAll('.category-btn').forEach(btn => {
-    btn.addEventListener('click', function(){
-      document.querySelectorAll('.category-btn').forEach(b => b.classList.remove('active'));
+    btn.addEventListener('click',function(){
+      document.querySelectorAll('.category-btn').forEach(b=>b.classList.remove('active'));
       this.classList.add('active');
       renderProducts(this.dataset.category);
     });
@@ -398,13 +410,14 @@ function setupSearch() {
     let html = '';
     filtered.forEach(p => { 
       const priceDisplay = convertPrice(p.price); 
-      let img = p.image && p.image.trim() !== '' ? getImageUrl(p.image) : 'https://picsum.photos/300/300?random=1';
+      // Sử dụng đường dẫn ảnh gốc từ dữ liệu
+      let img = p.image && p.image.trim() !== '' ? p.image : 'path/to/default/image.jpg';
       const isWished = wishlistMap[p._id] || false;
       const wishIcon = isWished ? '❤️' : '🤍';
       const wishClass = isWished ? 'active' : '';
       html += `<div class="product-card" data-id="${p._id}">
         <div class="wishlist-icon ${wishClass}" data-id="${p._id}">${wishIcon}</div>
-        <img src="${img}" alt="${escapeHtml(p.name)}">
+        <img src="${img}" alt="${escapeHtml(p.name)}" onerror="this.src='path/to/backup/image.jpg'">
         <div class="product-info">
           <div class="product-name">${escapeHtml(p.name)}</div>
           <div class="category-badge">${escapeHtml(p.category).toUpperCase()}</div>
@@ -433,15 +446,15 @@ function setupSearch() {
     });
   };
   
-  searchBtn.addEventListener('click', performSearch);
-  searchInput.addEventListener('keypress', e => e.key === 'Enter' && performSearch());
+  searchBtn.addEventListener('click',performSearch);
+  searchInput.addEventListener('keypress',e=>e.key==='Enter'&&performSearch());
 }
 
 // ==================== STICKY NAV ====================
 function setupStickyNav() { 
   const nav = document.getElementById('categoryNav'), slider = document.querySelector('.slider-container'); 
-  if(!nav || !slider) return; 
-  const observer = new IntersectionObserver(([e]) => nav.classList.toggle('sticky', !e.isIntersecting), {threshold: [0]}); 
+  if(!nav||!slider) return; 
+  const observer = new IntersectionObserver(([e])=>nav.classList.toggle('sticky',!e.isIntersecting),{threshold:[0]}); 
   observer.observe(slider); 
 }
 
@@ -482,6 +495,7 @@ async function login() {
       localStorage.setItem('authToken',token);
       localStorage.setItem('currentUserId',user._id);
       if (window.toast) toast.success(`Welcome back, ${user.name}!`);
+      // Điều hướng theo role: admin/staff vào dashboard, khách hàng ở lại trang chủ
       if (user.role === 'admin') setTimeout(() => window.location.href = '/admin/admin.html', 500);
       else if (user.role === 'staff') setTimeout(() => window.location.href = '/staff/staff.html', 500);
       else setTimeout(() => window.location.reload(), 500);
@@ -573,10 +587,14 @@ window.onCurrencyChange = () => {
   renderProducts(cat); 
 };
 
+// ==================== HÀM initPage ====================
 let pageInitialized = false;
 
 window.initPage = async () => {
-  if (pageInitialized) return;
+  if (pageInitialized) {
+    console.log('Page already initialized, skipping...');
+    return;
+  }
   pageInitialized = true;
   
   const savedLang = localStorage.getItem('shopLanguage');
@@ -605,36 +623,42 @@ window.initPage = async () => {
   setupStickyNav();
   setupEventListeners();
   setupModalHandlers();
+  // Section nổi bật + theo thành viên, và xử lý ?search= (đặt CUỐI vì loadWishlistStatus render lại grid)
   renderHomeSections();
   applySearchFromURL();
 };
 
+// Cập nhật lại section khi đổi tiền tệ/ngôn ngữ
 const _origCurrencyChange = window.onCurrencyChange;
 window.onCurrencyChange = () => { if (typeof _origCurrencyChange === 'function') _origCurrencyChange(); renderHomeSections(); };
 
-// ==================== BINDING NÚT BANNER TRỰC TIẾP KHÔNG BỊ PHÁ VỠ ====================
 function setupEventListeners() {
   const prevBtn = document.getElementById('prevBtn');
   const nextBtn = document.getElementById('nextBtn');
   const sliderContainer = document.querySelector('.slider-container');
   
   if (prevBtn) {
-    prevBtn.onclick = () => { 
+    const newPrevBtn = prevBtn.cloneNode(true);
+    prevBtn.parentNode.replaceChild(newPrevBtn, prevBtn);
+    newPrevBtn.addEventListener('click', () => { 
       prevSlide(); 
-      resetAutoSlide(); 
-    };
+      resetAutoSlide(); // Reset bộ đếm khi tương tác
+    });
   }
   
   if (nextBtn) {
-    nextBtn.onclick = () => { 
+    const newNextBtn = nextBtn.cloneNode(true);
+    nextBtn.parentNode.replaceChild(newNextBtn, nextBtn);
+    newNextBtn.addEventListener('click', () => { 
       nextSlide(); 
-      resetAutoSlide(); 
-    };
+      resetAutoSlide(); // Reset bộ đếm khi tương tác
+    });
   }
   
+  // Dừng/tiếp tục chạy khi di chuột vào/ra
   if (sliderContainer) {
-    sliderContainer.onmouseenter = stopAutoSlide;
-    sliderContainer.onmouseleave = startAutoSlide;
+    sliderContainer.addEventListener('mouseenter', stopAutoSlide);
+    sliderContainer.addEventListener('mouseleave', startAutoSlide);
   }
 }
 
@@ -664,6 +688,7 @@ function setupModalHandlers() {
   }
 }
 
+// Prevent multiple DOMContentLoaded listeners
 if (!window._domReadyExecuted) {
   window._domReadyExecuted = true;
   if (document.readyState === 'loading') {
