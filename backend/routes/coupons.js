@@ -32,7 +32,7 @@ async function isCouponValid(coupon, cartTotal = 0) {
 // Helper: Tính discount
 function calculateDiscount(coupon, cartTotal) {
   let discount = 0;
-  if (coupon.discountType === 'percentage' || coupon.discountType === 'percent') {
+  if (coupon.discountType === 'percent') { // <-- Sửa từ 'percentage' thành 'percent'
     discount = (cartTotal * coupon.discountValue) / 100;
   } else {
     discount = coupon.discountValue;
@@ -143,7 +143,7 @@ router.get('/:id', verifyToken, isStaffOrAdmin, async (req, res) => {
 // [STAFF/ADMIN] Create coupon
 router.post('/', verifyToken, isStaffOrAdmin, async (req, res) => {
   try {
-    const { code, discountType, discountValue, minOrder, usageLimit, expiry, active } = req.body;
+    let { code, discountType, discountValue, minOrder, usageLimit, expiry, active } = req.body;
     
     // Validation
     if (!code || !discountValue) {
@@ -152,7 +152,13 @@ router.post('/', verifyToken, isStaffOrAdmin, async (req, res) => {
     if (discountValue <= 0) {
       return res.status(400).json({ error: 'Discount value must be greater than 0' });
     }
-    if (discountType === 'percentage' && discountValue > 100) {
+    
+    // Chuẩn hóa dữ liệu đầu vào phòng trường hợp FE gửi lên 'percentage'
+    if (discountType === 'percentage') {
+      discountType = 'percent';
+    }
+    
+    if (discountType === 'percent' && discountValue > 100) { // <-- Sửa từ 'percentage' thành 'percent'
       return res.status(400).json({ error: 'Percentage discount cannot exceed 100%' });
     }
     
@@ -163,7 +169,7 @@ router.post('/', verifyToken, isStaffOrAdmin, async (req, res) => {
     
     const coupon = new Coupon({
       code: code.toUpperCase(),
-      discountType: discountType || 'percentage',
+      discountType: discountType || 'percent', // <-- Sửa mặc định từ 'percentage' thành 'percent'
       discountValue,
       minOrder: minOrder || 0,
       usageLimit: usageLimit || null,
@@ -182,13 +188,18 @@ router.post('/', verifyToken, isStaffOrAdmin, async (req, res) => {
 // [STAFF/ADMIN] Update coupon
 router.put('/:id', verifyToken, isStaffOrAdmin, async (req, res) => {
   try {
-    const { code, discountType, discountValue, minOrder, usageLimit, expiry, active } = req.body;
+    let { code, discountType, discountValue, minOrder, usageLimit, expiry, active } = req.body;
     
+    // Chuẩn hóa dữ liệu đầu vào phòng trường hợp FE gửi lên 'percentage'
+    if (discountType === 'percentage') {
+      discountType = 'percent';
+    }
+
     // Validation
     if (discountValue !== undefined && discountValue <= 0) {
       return res.status(400).json({ error: 'Discount value must be greater than 0' });
     }
-    if (discountType === 'percentage' && discountValue > 100) {
+    if (discountType === 'percent' && discountValue > 100) { // <-- Sửa từ 'percentage' thành 'percent'
       return res.status(400).json({ error: 'Percentage discount cannot exceed 100%' });
     }
     
