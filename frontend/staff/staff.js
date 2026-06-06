@@ -1,4 +1,4 @@
-const API_URL = 'http://localhost:3000/api';
+const API_URL = '/api';
 let authToken = null;
 let currentUser = null;
 let allProducts = [];
@@ -1066,7 +1066,7 @@ function init() {
     };
   }
   const backToShopBtn = document.getElementById('backToShopBtn');
-  if (backToShopBtn) backToShopBtn.onclick = () => window.location.href = 'http://localhost:3000';
+  if (backToShopBtn) backToShopBtn.onclick = () => window.location.href = '/';
   const staffLogoutBtn = document.getElementById('staffLogoutBtn');
   if (staffLogoutBtn) staffLogoutBtn.onclick = doLogout;
   checkLogin();

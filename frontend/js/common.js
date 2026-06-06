@@ -1,5 +1,5 @@
 // ==================== CẤU HÌNH ====================
-window.API_URL = 'http://localhost:3000/api';
+window.API_URL = '/api';
 let currentUser = null;
 let currentCurrency = 'USD';
 let currentLanguage = 'en';
@@ -203,12 +203,12 @@ function convertPrice(usdPrice) {
 function getImageUrl(path) {
   if (!path) return null;
   if (path.startsWith('http://') || path.startsWith('https://')) return path;
-  if (path.startsWith('/image/')) return `http://localhost:3000${path}`;
-  if (path.startsWith('/uploads/')) return `http://localhost:3000${path.replace('/uploads', '/image')}`;
-  if (path.startsWith('image/')) return `http://localhost:3000/${path}`;
-  if (!path.includes('/')) return `http://localhost:3000/image/products/${path}`;
-  if (path.startsWith('/')) return `http://localhost:3000${path}`;
-  return `http://localhost:3000/${path}`;
+  if (path.startsWith('/image/')) return `${path}`;
+  if (path.startsWith('/uploads/')) return `${path.replace('/uploads', '/image')}`;
+  if (path.startsWith('image/')) return `/${path}`;
+  if (!path.includes('/')) return `/image/products/${path}`;
+  if (path.startsWith('/')) return `${path}`;
+  return `/${path}`;
 }
 
 // ==================== TOAST ====================
@@ -727,7 +727,7 @@ async function loadHeader() {
     const logoutBtn = document.getElementById('logoutBtn'); 
     if(logoutBtn) logoutBtn.addEventListener('click', logout);
     const logo = document.querySelector('.logo-top');
-    if(logo) logo.addEventListener('click', () => window.location.href = 'http://localhost:3000');
+    if(logo) logo.addEventListener('click', () => window.location.href = '/');
     const markAllBtn = document.getElementById('markAllNotificationsBtn');
     if (markAllBtn) markAllBtn.addEventListener('click', markAllNotificationsRead);
     // Tìm kiếm từ MỌI trang -> chuyển sang trang chủ hiển thị sản phẩm khớp
@@ -742,7 +742,7 @@ async function loadHeader() {
     if (typeof window.initPage === 'function') window.initPage();
   } catch(error) {
     console.error('Failed to load header:', error);
-    placeholder.innerHTML = `<div class="top-bar" style="background:#fff;padding:1rem;text-align:center;">SHOTTYSHOP - <a href="http://localhost:3000">Home</a> | <a href="/crud/cart.html">Cart</a> | <a href="/crud/login.html">Login</a></div>`;
+    placeholder.innerHTML = `<div class="top-bar" style="background:#fff;padding:1rem;text-align:center;">SHOTTYSHOP - <a href="/">Home</a> | <a href="/crud/cart.html">Cart</a> | <a href="/crud/login.html">Login</a></div>`;
     if (typeof window.initPage === 'function') window.initPage();
   }
 }

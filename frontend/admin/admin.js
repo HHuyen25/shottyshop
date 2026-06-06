@@ -1,4 +1,4 @@
-const API_URL = 'http://localhost:3000/api';
+const API_URL = '/api';
 let authToken = null;
 let currentUser = null;
 let allUsers = [], allProducts = [], allOrders = [], allBanners = [], allCoupons = [];
@@ -37,8 +37,8 @@ function escapeHtml(str) { if (!str) return ''; return str.replace(/[&<>]/g, m =
 function getImageUrl(path) {
   if(!path) return 'https://picsum.photos/400/200?random=1';
   if(path.startsWith('http')) return path;
-  if(path.startsWith('/')) return `http://localhost:3000${path}`;
-  return `http://localhost:3000/${path}`;
+  if(path.startsWith('/')) return `${path}`;
+  return `/${path}`;
 }
 
 function showToast(message, type = 'success') {
@@ -61,7 +61,7 @@ async function fetchWithAuth(url, options = {}) {
 
 async function uploadFile(file, type) { 
   const formData = new FormData(); formData.append('file', file); 
-  const res = await fetchWithAuth(`http://localhost:3000/api/upload?type=${type}`, { method: 'POST', body: formData }); 
+  const res = await fetchWithAuth(`/api/upload?type=${type}`, { method: 'POST', body: formData }); 
   if (!res.ok) throw new Error('Upload failed'); 
   const data = await res.json(); return data.url; 
 }
@@ -891,7 +891,7 @@ async function checkAdmin() {
     if (res.status === 401 || res.status === 403) { localStorage.removeItem('authToken'); localStorage.removeItem('currentUserId'); window.location.href = '/crud/login.html'; return; }
     if (!res.ok) throw new Error(`Server error ${res.status}`);
     currentUser = await res.json();
-    if (currentUser.role !== 'admin') { showToast('Bạn không có quyền truy cập Admin', 'error'); setTimeout(() => window.location.href = 'http://localhost:3000', 1500); return; }
+    if (currentUser.role !== 'admin') { showToast('Bạn không có quyền truy cập Admin', 'error'); setTimeout(() => window.location.href = '/', 1500); return; }
     document.getElementById('adminName').textContent = currentUser.name;
     await loadAllData();
     const langSelect = document.getElementById('globalLanguageSelect');
@@ -917,7 +917,7 @@ function updateUILanguage() {
   document.getElementById('pageTitle').textContent = t(currentPage);
 }
 document.querySelectorAll('.nav-item[data-page]').forEach(item => { item.addEventListener('click', () => showPage(item.dataset.page)); });
-document.getElementById('backToShopBtn')?.addEventListener('click', () => window.location.href = 'http://localhost:3000');
+document.getElementById('backToShopBtn')?.addEventListener('click', () => window.location.href = '/');
 document.getElementById('adminLogoutBtn')?.addEventListener('click', logout);
 document.getElementById('menuToggle')?.addEventListener('click', () => document.querySelector('.sidebar').classList.toggle('open'));
 window.showPage = showPage;

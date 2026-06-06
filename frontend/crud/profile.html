@@ -83,7 +83,7 @@
       formData.append('file', file);
       try {
         showLoading();
-        const res = await fetch(`http://localhost:3000/api/upload?type=avatar`, {
+        const res = await fetch(`/api/upload?type=avatar`, {
           method: 'POST',
           headers: { 'Authorization': `Bearer ${authToken}` },
           body: formData

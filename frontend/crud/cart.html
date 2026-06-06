@@ -37,7 +37,7 @@
   <div class="cart-container">
     <div class="cart-header">
       <h1 data-key="cart">🛒 Shopping Cart</h1>
-      <a href="http://localhost:3000" class="continue-shopping" data-key="continue_shopping">← Continue Shopping</a>
+      <a href="/" class="continue-shopping" data-key="continue_shopping">← Continue Shopping</a>
     </div>
     <div id="cartContent"></div>
   </div>
@@ -76,7 +76,7 @@
     function renderCart() {
       const container = document.getElementById('cartContent');
       if (!cart.length) {
-        container.innerHTML = `<div class="empty-cart"><p data-key="empty_cart">🛒 Your cart is empty</p><a href="http://localhost:3000" class="btn-primary" style="display:inline-block;margin-top:1rem;" data-key="continue_shopping">Continue Shopping</a></div>`;
+        container.innerHTML = `<div class="empty-cart"><p data-key="empty_cart">🛒 Your cart is empty</p><a href="/" class="btn-primary" style="display:inline-block;margin-top:1rem;" data-key="continue_shopping">Continue Shopping</a></div>`;
         return;
       }
       let itemsHtml = '';
