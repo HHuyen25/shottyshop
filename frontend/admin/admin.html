@@ -8,13 +8,13 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js\"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </head>
 <body>
   <div class="app">
     <aside class="sidebar">
       <div class="sidebar-header">
-        <img src="/image/logo.png" alt="Logo" class="logo-img" onerror="this.style.display='none'">
+        <img src="/image/logo.png" alt="SHOTTYSHOP" class="logo-img" onerror="this.style.display='none'">
         <div>
           <div class="logo-text">SHOTTYSHOP</div>
           <div class="logo-sub">Administration</div>
@@ -22,12 +22,12 @@
       </div>
       <nav class="sidebar-nav">
         <a href="#" class="nav-item active" data-page="dashboard">Dashboard</a>
+        <a href="#" class="nav-item" data-page="users">Users</a>
         <a href="#" class="nav-item" data-page="products">Products</a>
         <a href="#" class="nav-item" data-page="banners">Banners</a>
         <a href="#" class="nav-item" data-page="orders">Orders</a>
-        <a href="#" class="nav-item" data-page="users">Users</a>
         <a href="#" class="nav-item" data-page="coupons">Coupons</a>
-        <a href="#" class="nav-item" data-page="posts">Posts</a>
+        <a href="#" class="nav-item" data-page="posts">Blog Posts</a>
         <a href="#" class="nav-item" data-page="reports">Reports</a>
       </nav>
       <div class="sidebar-footer">
@@ -64,11 +64,10 @@
     </main>
   </div>
 
-  <div id="globalLoading" class="loading-overlay" style="display:none;">
+  <div id="globalLoading" class="loading-overlay" style="display: none;">
     <div class="spinner"></div>
   </div>
 
-  <script src="/js/common.js"></script>
   <script src="admin.js"></script>
 </body>
 </html>
