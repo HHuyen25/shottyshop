@@ -283,6 +283,7 @@ function renderSlider() {
   const dotsContainer = document.getElementById('sliderDots');
   if (!slider) return;
   
+  // Sửa lỗi: Hỗ trợ map linh hoạt cả thuộc tính b.image, b.imageUrl hoặc b.url từ database trả về
   const allBanners = window.banners || [];
   if (!allBanners.length) { renderSliderFallback(); return; }
   
@@ -292,19 +293,23 @@ function renderSlider() {
   allBanners.forEach((b, idx) => {
     const slide = document.createElement('div'); 
     slide.className = `slide ${idx === 0 ? 'active' : ''}`;
-    const mediaUrl = b.image;
+    
+    // Đảm bảo lấy đúng link ảnh bất kể tên biến backend trả về
+    const mediaUrl = b.image || b.imageUrl || b.url || '';
     const isVideo = b.mediaType === 'video' || (mediaUrl && mediaUrl.match(/\.(mp4|webm|mov)$/i));
     
     if (isVideo) {
-      slide.innerHTML = `<video autoplay muted loop playsinline style="width:100%;height:100%;object-fit:cover;"><source src="${mediaUrl}" type="video/mp4"></video><div class="slide-content"><h1>${escapeHtml(b.title)}</h1><p>${escapeHtml(b.subtitle)}</p><button class="shop-now" data-link="${b.buttonLink}">${escapeHtml(b.buttonText) || 'SHOP NOW →'}</button></div>`;
+      slide.innerHTML = `<video autoplay muted loop playsinline style="width:100%;height:100%;object-fit:cover;"><source src="${mediaUrl}" type="video/mp4"></video><div class="slide-content"><h1>${escapeHtml(b.title || '')}</h1><p>${escapeHtml(b.subtitle || '')}</p><button class="shop-now" data-link="${b.buttonLink || '#'}">${escapeHtml(b.buttonText) || 'SHOP NOW →'}</button></div>`;
     } else {
-      slide.innerHTML = `<div class="slide-bg" style="background: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.4)), url('${mediaUrl}'); background-size: cover; background-position: center;"></div><div class="slide-content"><h1>${escapeHtml(b.title)}</h1><p>${escapeHtml(b.subtitle)}</p><button class="shop-now" data-link="${b.buttonLink}">${escapeHtml(b.buttonText) || 'SHOP NOW →'}</button></div>`;
+      // FIX LỖI ẢNH: Sử dụng thẻ <img> hoặc áp thuộc tính CSS chuẩn trực tiếp vào thẻ nền
+      slide.innerHTML = `<div class="slide-bg" style="background: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.4)), url('${mediaUrl}'); background-size: cover; background-position: center; width: 100%; height: 100%; position: absolute; top:0; left:0; z-index:-1;"></div><div class="slide-content"><h1>${escapeHtml(b.title || '')}</h1><p>${escapeHtml(b.subtitle || '')}</p><button class="shop-now" data-link="${b.buttonLink || '#'}">${escapeHtml(b.buttonText) || 'SHOP NOW →'}</button></div>`;
     }
     slider.appendChild(slide);
     
     if (dotsContainer) {
       const dot = document.createElement('span'); 
       dot.className = `dot ${idx === 0 ? 'active' : ''}`; 
+      dot.style.cursor = 'pointer'; // Thêm trỏ chuột tương tác cho dấu chấm
       dot.addEventListener('click', () => { goToSlide(idx); resetAutoSlide(); }); 
       dotsContainer.appendChild(dot);
     }
@@ -322,7 +327,7 @@ function renderSlider() {
 function renderSliderFallback() {
   const slider = document.getElementById('mainSlider') || document.getElementById('slider');
   if (!slider) return;
-  slider.innerHTML = '<div class="slide active"><div class="slide-bg" style="background: linear-gradient(135deg, #667eea, #764ba2);"></div><div class="slide-content"><h1>SHOTTYSHOP</h1><p>Official Store</p><button class="shop-now" data-link="#">SHOP NOW →</button></div></div>';
+  slider.innerHTML = '<div class="slide active"><div class="slide-bg" style="background: linear-gradient(135deg, #667eea, #764ba2); width:100%; height:100%; position:absolute; top:0; left:0; z-index:-1;"></div><div class="slide-content"><h1>SHOTTYSHOP</h1><p>Official Store</p><button class="shop-now" data-link="#">SHOP NOW →</button></div></div>';
   slides = slider.querySelectorAll('.slide'); 
   startAutoSlide();
 }
@@ -370,13 +375,13 @@ window.initPage = async () => {
   const savedCurr = localStorage.getItem('shopCurrency') || 'USD';
   setCurrency(savedCurr);
   
-  // Tải dữ liệu song song từ API của bạn
+  // Tải dữ liệu song song từ API
   await Promise.all([
     window.loadProducts ? window.loadProducts() : Promise.resolve(),
     window.loadBanners ? window.loadBanners() : Promise.resolve()
   ]);
   
-  // Chỉ gọi đúng 1 lần duy nhất chống xung đột lặp lại
+  // Khởi tạo render các thành phần giao diện
   const currentCategory = document.querySelector('.category-btn.active')?.dataset.category || 'all';
   renderProducts(currentCategory);
   renderSlider();
@@ -395,14 +400,15 @@ window.initPage = async () => {
   });
   
   // Cài đặt thanh Menu sticky khi trượt
-  const nav = document.getElementById('categoryNav'), sliderContainer = document.querySelector('.slider-container'); 
+  const nav = document.getElementById('categoryNav'), sliderContainer = document.querySelector('.slider-container') || document.querySelector('.slider'); 
   if(nav && sliderContainer) {
     new IntersectionObserver(([e])=>nav.classList.toggle('sticky',!e.isIntersecting),{threshold:[0]}).observe(sliderContainer); 
   }
   
-  // Điều khiển các nút Slider thủ công
+  // Điều khiển các nút Slider thủ công (Hỗ trợ nút <> và dấu ... đổi slide khác)
   document.getElementById('prevSlide')?.addEventListener('click', () => { prevSlide(); resetAutoSlide(); });
   document.getElementById('nextSlide')?.addEventListener('click', () => { nextSlide(); resetAutoSlide(); });
+  
   if (sliderContainer) {
     sliderContainer.addEventListener('mouseenter', stopAutoSlide);
     sliderContainer.addEventListener('mouseleave', startAutoSlide);
