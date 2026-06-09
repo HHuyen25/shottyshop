@@ -13,6 +13,16 @@ let currentPage = 'dashboard';
 const exchangeRates = { USD: 1, VND: 25500 };
 const currencySymbols = { USD: '$', VND: '₫' };
 
+// Chuẩn hóa URL ảnh: bỏ host localhost cũ -> đường dẫn tương đối (chạy đúng local & hosting)
+function getImageUrl(path) {
+  if (!path) return '';
+  path = String(path).replace(/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?/i, '');
+  if (path.startsWith('http://') || path.startsWith('https://')) return path;
+  if (path.startsWith('/uploads/')) return path.replace('/uploads', '/image');
+  if (path.startsWith('/')) return path;
+  return '/' + path;
+}
+
 const translations = {
   vi: {
     dashboard: 'Dashboard', products: 'Sản phẩm', banners: 'Banner', orders: 'Đơn hàng',
