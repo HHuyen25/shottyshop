@@ -100,7 +100,7 @@ function renderProducts(category) {
   let html = '';
   filtered.forEach(p => {
     const priceDisplay = convertPrice(p.price);
-    let img = p.image && p.image.trim() !== '' ? p.image : 'https://picsum.photos/300/300'; 
+    let img = p.image && p.image.trim() !== '' ? getImageUrl(p.image) : 'https://picsum.photos/300/300'; 
     const isWished = wishlistMap[p._id] || false;
     const wishIcon = isWished ? '❤️' : '🤍';
     const wishClass = isWished ? 'active' : '';
@@ -138,7 +138,7 @@ function renderProducts(category) {
 
 function productCardHTML(p) {
   const priceDisplay = convertPrice(p.price);
-  const img = p.image && p.image.trim() !== '' ? p.image : 'https://picsum.photos/300/300';
+  const img = p.image && p.image.trim() !== '' ? getImageUrl(p.image) : 'https://picsum.photos/300/300';
   const isWished = wishlistMap[p._id] || false;
   return `
     <div class="product-card" data-id="${p._id}">
@@ -166,7 +166,7 @@ const HOME_MEMBERS = ['OHYUL', 'RYUL', 'WOOJIN', 'LOUIS'];
 const WS_PER_PAGE = 4;
 
 function wsCardHTML(p) {
-  const img = p.image && p.image.trim() ? p.image : 'https://picsum.photos/300/300';
+  const img = p.image && p.image.trim() ? getImageUrl(p.image) : 'https://picsum.photos/300/300';
   const isWished = wishlistMap[p._id] || false;
   let tags = '';
   if (p.featured) tags += '<span class="ws-tag tag-exclusive">EXCLUSIVE</span>';
@@ -295,7 +295,8 @@ function renderSlider() {
     slide.className = `slide ${idx === 0 ? 'active' : ''}`;
     
     // Đảm bảo lấy đúng link ảnh bất kể tên biến backend trả về
-    const mediaUrl = b.image || b.imageUrl || b.url || '';
+    const _rawMedia = b.image || b.imageUrl || b.url || '';
+    const mediaUrl = (typeof getImageUrl === 'function' ? getImageUrl(_rawMedia) : _rawMedia) || '';
     const isVideo = b.mediaType === 'video' || (mediaUrl && mediaUrl.match(/\.(mp4|webm|mov)$/i));
     
     if (isVideo) {

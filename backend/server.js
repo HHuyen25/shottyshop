@@ -30,7 +30,7 @@ if (isProduction) {
         defaultSrc: ["'self'"], 
         scriptSrc: ["'self'", "'unsafe-inline'", "https://accounts.google.com", "https://cdn.jsdelivr.net", "https://cdn.sheetjs.com", "https://apis.google.com"],
         styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://cdn.jsdelivr.net", "https://cdnjs.cloudflare.com"],
-        imgSrc: ["'self'", "data:", "blob:", "https://res.cloudinary.com", "https://lh3.googleusercontent.com"],
+        imgSrc: ["'self'", "data:", "blob:", "https://res.cloudinary.com", "https://lh3.googleusercontent.com", "https://picsum.photos", "https://img.vietqr.io", "https://api.qrserver.com", "https://*.vietqr.io"],
         connectSrc: ["'self'", "https://api.cloudinary.com", "https://shottyshop.onrender.com", "https://accounts.google.com"]
       } 
     } 
