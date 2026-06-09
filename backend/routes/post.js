@@ -62,8 +62,8 @@ router.get('/slug/:slug', async (req, res) => {
 
 // ==================== STAFF/ADMIN ROUTES ====================\
 
-// GET /api/posts/admin - Quản lý tất cả bài viết
-router.get('/admin', verifyToken, isStaffOrAdmin, async (req, res) => {
+// GET /api/posts/admin/all - Quản lý tất cả bài viết (admin & staff)
+router.get('/admin/all', verifyToken, isStaffOrAdmin, async (req, res) => {
   try {
     const posts = await Post.find().sort({ createdAt: -1 });
     res.json(posts);
@@ -145,6 +145,32 @@ router.get('/stats/categories', async (req, res) => {
       { $group: { _id: '$category', count: { $sum: 1 } } }
     ]);
     res.json(stats);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// POST /api/posts/:id/like - Thích bài viết
+router.post('/:id/like', async (req, res) => {
+  try {
+    const post = await Post.findByIdAndUpdate(req.params.id, { $inc: { likes: 1 } }, { new: true });
+    if (!post) return res.status(404).json({ error: 'Post not found' });
+    res.json({ likes: post.likes });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// POST /api/posts/:slug/comments - Bình luận bài viết
+router.post('/:slug/comments', async (req, res) => {
+  try {
+    const { userName, userEmail, content } = req.body;
+    if (!content || !content.trim()) return res.status(400).json({ error: 'Nội dung bình luận trống' });
+    const post = await Post.findOne({ slug: req.params.slug });
+    if (!post) return res.status(404).json({ error: 'Post not found' });
+    post.comments.push({ userName: userName || 'Khách', userEmail: userEmail || 'guest@shottyshop.com', content: content.trim() });
+    await post.save();
+    res.status(201).json(post.comments[post.comments.length - 1]);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
