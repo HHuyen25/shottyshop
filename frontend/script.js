@@ -181,6 +181,7 @@ function wsCardHTML(p) {
       <div class="ws-name">${escapeHtml(p.name)}</div>
       <div class="ws-price"><span class="cur">${currentCurrency || 'USD'}</span>${convertPrice(p.price)}</div>
       ${tags ? `<div class="ws-tags">${tags}</div>` : ''}
+      <button class="add-to-cart ws-add" data-id="${p._id}" data-name="${escapeHtml(p.name)}" data-price="${p.price}" data-image="${img}">🛒 ${translations[currentLanguage]?.add_to_cart || 'ADD TO CART'}</button>
     </div>`;
 }
 
@@ -191,6 +192,7 @@ function bindWsCards(scope) {
   scope.querySelectorAll('.ws-wish').forEach(icon => {
     icon.onclick = (e) => { e.stopPropagation(); toggleWishlist(icon.dataset.id, icon); };
   });
+  scope.querySelectorAll('.ws-card .add-to-cart').forEach(btn => { btn.removeEventListener('click', addToCartHandler); btn.addEventListener('click', addToCartHandler); });
 }
 
 function wsSectionHTML(title, items, idx) {
