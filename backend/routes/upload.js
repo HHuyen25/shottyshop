@@ -5,6 +5,20 @@ const fs = require('fs');
 const sharp = require('sharp');
 const { verifyToken, isStaffOrAdmin } = require('../middleware/auth');
 
+// ==================== CLOUDINARY (kho ảnh cloud — ảnh không bao giờ mất) ====================
+const cloudinary = require('cloudinary').v2;
+const cloudinaryEnabled = !!(process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY && process.env.CLOUDINARY_API_SECRET);
+if (cloudinaryEnabled) {
+  cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET
+  });
+  console.log('Cloudinary: ĐÃ bật — ảnh/video upload sẽ lưu trên cloud (không mất khi Render restart)');
+} else {
+  console.log('Cloudinary: chưa cấu hình — lưu file local (sẽ mất trên Render khi restart)');
+}
+
 const router = express.Router();
 
 // Cấu hình storage
@@ -137,11 +151,32 @@ router.post('/', verifyToken, uploadPermission, (req, res) => {
       }
     }
     
-    console.log(`File uploaded: ${fileUrl}`);
-    res.json({ 
-      success: true, 
-      url: fileUrl,
-      thumbnail: thumbnailUrl,
+    // Nếu bật Cloudinary -> tải lên cloud, trả URL cloud (ảnh tồn tại vĩnh viễn, web & local dùng chung)
+    let finalUrl = fileUrl;
+    let finalThumb = thumbnailUrl;
+    if (cloudinaryEnabled) {
+      try {
+        const isVideo = /\.(mp4|webm|mov|avi)$/i.test(fileName);
+        const result = await cloudinary.uploader.upload(filePath, {
+          folder: `shottyshop/${type}`,
+          resource_type: isVideo ? 'video' : 'image',
+          public_id: fileName.replace(/\.[^.]+$/, '')
+        });
+        finalUrl = result.secure_url;
+        finalThumb = result.secure_url;
+        // Xóa file tạm trên đĩa (đã có trên cloud)
+        try { fs.unlinkSync(filePath); } catch (_) {}
+        try { const tp = path.join(path.dirname(filePath), 'thumb', fileName); if (fs.existsSync(tp)) fs.unlinkSync(tp); } catch (_) {}
+      } catch (e) {
+        console.error('Cloudinary upload lỗi -> dùng file local:', e.message);
+      }
+    }
+
+    console.log(`File uploaded: ${finalUrl}`);
+    res.json({
+      success: true,
+      url: finalUrl,
+      thumbnail: finalThumb,
       filename: fileName,
       type: type,
       size: req.file.size
