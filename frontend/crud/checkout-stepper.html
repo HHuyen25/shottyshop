@@ -623,14 +623,13 @@ async function createOrderAPI(orderData) {
         refreshStep3();
       };
 
-      // Bắt buộc đăng nhập mới được thanh toán
-      (window.requireLogin ? window.requireLogin() : Promise.resolve(true)).then(ok => {
-        if (!ok) return; // chưa đăng nhập -> đã chuyển sang trang login (nhớ quay lại checkout)
-        populateCouponSelect();
-        loadCartAndUser();
-        initPaymentSelection();
-        bindEvents();
-      });
+      // LUÔN render giỏ hàng trước (không để việc kiểm tra đăng nhập chặn hiển thị danh sách sản phẩm)
+      populateCouponSelect();
+      loadCartAndUser();
+      initPaymentSelection();
+      bindEvents();
+      // Bắt buộc đăng nhập mới được thanh toán: kiểm tra riêng, nếu chưa đăng nhập sẽ tự chuyển sang trang login
+      if (window.requireLogin) { try { window.requireLogin(); } catch (e) {} }
     })();
   </script>
 </body>
