@@ -279,7 +279,8 @@ function addToCart(btn) {
 
 // ==================== BANNER SLIDER RUNNING ====================
 function renderSlider() {
-  const slider = document.getElementById('mainSlider') || document.getElementById('slider');
+  // Dùng div #slider bên trong (KHÔNG dùng #mainSlider) để không xóa mất nút ❮ ❯ và dots
+  const slider = document.getElementById('slider') || document.getElementById('mainSlider');
   const dotsContainer = document.getElementById('sliderDots');
   if (!slider) return;
   
@@ -326,7 +327,7 @@ function renderSlider() {
 }
 
 function renderSliderFallback() {
-  const slider = document.getElementById('mainSlider') || document.getElementById('slider');
+  const slider = document.getElementById('slider') || document.getElementById('mainSlider');
   if (!slider) return;
   slider.innerHTML = '<div class="slide active"><div class="slide-bg" style="background: linear-gradient(135deg, #667eea, #764ba2); width:100%; height:100%; position:absolute; top:0; left:0; z-index:-1;"></div><div class="slide-content"><h1>SHOTTYSHOP</h1><p>Official Store</p><button class="shop-now" data-link="#">SHOP NOW →</button></div></div>';
   slides = slider.querySelectorAll('.slide'); 
@@ -407,8 +408,8 @@ window.initPage = async () => {
   }
   
   // Điều khiển các nút Slider thủ công (Hỗ trợ nút <> và dấu ... đổi slide khác)
-  document.getElementById('prevSlide')?.addEventListener('click', () => { prevSlide(); resetAutoSlide(); });
-  document.getElementById('nextSlide')?.addEventListener('click', () => { nextSlide(); resetAutoSlide(); });
+  document.getElementById('prevBtn')?.addEventListener('click', () => { prevSlide(); resetAutoSlide(); });
+  document.getElementById('nextBtn')?.addEventListener('click', () => { nextSlide(); resetAutoSlide(); });
   
   if (sliderContainer) {
     sliderContainer.addEventListener('mouseenter', stopAutoSlide);

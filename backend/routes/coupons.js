@@ -32,7 +32,7 @@ async function isCouponValid(coupon, cartTotal = 0) {
 // Helper: Tính discount
 function calculateDiscount(coupon, cartTotal) {
   let discount = 0;
-  if (coupon.discountType === 'percent') { // <-- Sửa từ 'percentage' thành 'percent'
+  if (coupon.discountType === 'percent' || coupon.discountType === 'percentage') {
     discount = (cartTotal * coupon.discountValue) / 100;
   } else {
     discount = coupon.discountValue;
