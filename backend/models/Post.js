@@ -16,6 +16,7 @@ const postSchema = new mongoose.Schema({
   category: { type: String, default: 'news' },
   tags: [String],
   featuredImage: { type: String, default: '' },
+  images: [{ type: String }], // Nhiều ảnh cho bài viết
   videoLinks: [{ type: String }], // Link nhúng video/bài viết: YouTube, TikTok, Facebook, Zalo...
   socialLinks: {
     facebook: { type: String, default: '' },

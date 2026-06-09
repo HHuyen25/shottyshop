@@ -75,13 +75,13 @@ router.get('/admin', verifyToken, isStaffOrAdmin, async (req, res) => {
 // POST /api/posts - Tạo bài viết mới
 router.post('/', verifyToken, isStaffOrAdmin, async (req, res) => {
   try {
-    const { title, content, category, excerpt, image, tags, status } = req.body;
+    const { title, content, category, excerpt, image, featuredImage, images, tags, status, videoLinks, socialLinks } = req.body;
     if (!title || !content) return res.status(400).json({ error: 'Title and Content are required' });
     let baseSlug = title.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-');
     const existingPosts = await Post.find({ slug: new RegExp(`^${baseSlug}`) }, 'slug');
     const existingSlugs = existingPosts.map(p => p.slug);
     const slug = generateUniqueSlug(baseSlug, existingSlugs);
-    const postData = { title, content, category, excerpt, image, tags, status, slug, author: req.user.id };
+    const postData = { title, content, category, excerpt, featuredImage: featuredImage || image || '', images: images || [], videoLinks: videoLinks || [], socialLinks: socialLinks || {}, tags: tags || [], status, slug, author: req.user.name || 'Admin', authorId: req.user.id || req.user._id };
     if (status === 'published') postData.publishedAt = new Date();
     const post = new Post(postData);
     await post.save();
@@ -100,10 +100,14 @@ router.post('/', verifyToken, isStaffOrAdmin, async (req, res) => {
 // PUT /api/posts/:id - Cập nhật bài viết
 router.put('/:id', verifyToken, isStaffOrAdmin, async (req, res) => {
   try {
-    const { title, content, category, excerpt, image, tags, status } = req.body;
+    const { title, content, category, excerpt, image, featuredImage, images, tags, status, videoLinks, socialLinks } = req.body;
     const existingPost = await Post.findById(req.params.id);
     if (!existingPost) return res.status(404).json({ error: 'Post not found' });
-    const updateData = { title, content, category, excerpt, image, tags, status, updatedAt: Date.now() };
+    const updateData = { title, content, category, excerpt, tags, status, updatedAt: Date.now() };
+    if (featuredImage !== undefined || image !== undefined) updateData.featuredImage = featuredImage !== undefined ? featuredImage : image;
+    if (images !== undefined) updateData.images = images;
+    if (videoLinks !== undefined) updateData.videoLinks = videoLinks;
+    if (socialLinks !== undefined) updateData.socialLinks = socialLinks;
     let wasPublished = false;
     if (existingPost.status !== 'published' && status === 'published') {
       updateData.publishedAt = new Date();

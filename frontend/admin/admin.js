@@ -105,6 +105,25 @@ window.updateOptionName = (i, v) => { if (productOptionsList[i]) productOptionsL
 window.updateOptionValues = (i, v) => { if (productOptionsList[i]) productOptionsList[i].values = v.split(',').map(s => s.trim()).filter(Boolean); };
 window.removeProductOption = (i) => { productOptionsList.splice(i, 1); renderProductOptions(); };
 
+// ── Media nhiều ảnh + video cho BÀI VIẾT ──
+let postMediaList = [];
+function renderPostMedia() {
+  const box = document.getElementById('postMediaPreview');
+  if (!box) return;
+  box.innerHTML = postMediaList.map((m, i) => {
+    const src = getImageUrl(m.url);
+    const thumb = m.type === 'video'
+      ? `<video src="${src}" muted style="width:74px;height:74px;object-fit:cover;border-radius:8px;border:1px solid #ddd;"></video>`
+      : `<img src="${src}" style="width:74px;height:74px;object-fit:cover;border-radius:8px;border:1px solid #ddd;">`;
+    const tag = i === 0 ? '<span style="position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,.6);color:#fff;font-size:9px;text-align:center;border-radius:0 0 8px 8px;">Đại diện</span>' : '';
+    return `<div style="position:relative;width:74px;height:74px;">${thumb}${tag}<button type="button" onclick="removePostMedia(${i})" style="position:absolute;top:-7px;right:-7px;background:#dc2626;color:#fff;border:none;border-radius:50%;width:20px;height:20px;cursor:pointer;font-size:12px;line-height:1;">×</button></div>`;
+  }).join('') || '<small style="color:#888">Chưa có ảnh/video nào</small>';
+  const firstImg = postMediaList.find(m => m.type === 'image');
+  const imgInput = document.getElementById('postImage');
+  if (imgInput) imgInput.value = firstImg ? firstImg.url : '';
+}
+window.removePostMedia = (i) => { postMediaList.splice(i, 1); renderPostMedia(); };
+
 function logout() {
   localStorage.removeItem('authToken'); localStorage.removeItem('currentUserId');
   showToast('Logged out successfully');
@@ -739,30 +758,25 @@ function renderPosts() {
   document.getElementById('pageContent').innerHTML = `
     <div class="toolbar"><h2>Bài viết / Blog</h2><div><select id="postStatusFilter" class="filter-select"><option value="all">Tất cả</option><option value="published">Đã xuất bản</option><option value="draft">Bản nháp</option><option value="archived">Đã lưu trữ</option></select><button class="btn-primary" id="addPostBtn">+ Viết bài mới</button></div></div>
     <div class="table-container"><table class="simple-table"><thead><tr><th>Hình ảnh</th><th>Tiêu đề</th><th>Danh mục</th><th>Trạng thái</th><th>Lượt xem</th><th>Ngày đăng</th><th>Thao tác</th></tr></thead><tbody id="postsTableBody"></tbody></table></div>
-    <div id="postModal" class="modal"><div class="modal-content" style="max-width:800px;"><div class="modal-header"><h3 id="postModalTitle">${t('add')} Bài viết</h3><span class="close" onclick="closePostModal()">&times;</span></div><div class="modal-body"><div class="form-group"><label>Tiêu đề *</label><input type="text" id="postTitle" class="form-input"></div><div class="form-group"><label>Danh mục</label><select id="postCategory" class="form-input"><option value="news">News</option><option value="event">Event</option><option value="guide">Guide</option><option value="review">Review</option><option value="announcement">Announcement</option><option value="update">Update</option></select></div><div class="form-group"><label>Tags (cách nhau bằng dấu phẩy)</label><input type="text" id="postTags" class="form-input" placeholder="VD: kpop, album, concert"></div><div class="form-group"><label>Hình ảnh đại diện</label><div><button type="button" class="btn-secondary" id="postUploadBtn">Chọn ảnh</button><input type="file" id="postFileInput" accept="image/*" style="display:none"><div id="postPreview"></div><input type="hidden" id="postImage"></div></div><div class="form-group"><label>Tóm tắt (excerpt)</label><textarea id="postExcerpt" rows="2" class="form-input"></textarea></div><div class="form-group"><label>Nội dung *</label><textarea id="postContent" rows="10" class="form-input"></textarea></div><div class="form-group"><label>Trạng thái</label><select id="postStatus" class="form-input"><option value="draft">Bản nháp</option><option value="published">Xuất bản</option><option value="archived">Lưu trữ</option></select></div><div class="form-group"><label>Link video nhúng (YouTube, TikTok, Vimeo — mỗi link 1 dòng)</label><textarea id="postVideoLinks" rows="2" class="form-input" placeholder="https://youtube.com/watch?v=..."></textarea></div><div class="form-row-2"><div class="form-group"><label>Facebook</label><input id="postFacebook" class="form-input" placeholder="https://facebook.com/..."></div><div class="form-group"><label>Zalo</label><input id="postZalo" class="form-input" placeholder="https://zalo.me/..."></div></div><div class="form-row-2"><div class="form-group"><label>TikTok</label><input id="postTiktok" class="form-input" placeholder="https://tiktok.com/..."></div><div class="form-group"><label>YouTube</label><input id="postYoutube" class="form-input" placeholder="https://youtube.com/..."></div></div></div><div class="modal-footer"><button class="btn-secondary" onclick="closePostModal()">${t('cancel')}</button><button class="btn-primary" id="savePostBtn">${t('save')}</button></div></div></div>
+    <div id="postModal" class="modal"><div class="modal-content" style="max-width:800px;"><div class="modal-header"><h3 id="postModalTitle">${t('add')} Bài viết</h3><span class="close" onclick="closePostModal()">&times;</span></div><div class="modal-body"><div class="form-group"><label>Tiêu đề *</label><input type="text" id="postTitle" class="form-input"></div><div class="form-group"><label>Danh mục</label><select id="postCategory" class="form-input"><option value="news">News</option><option value="event">Event</option><option value="guide">Guide</option><option value="review">Review</option><option value="announcement">Announcement</option><option value="update">Update</option></select></div><div class="form-group"><label>Tags (cách nhau bằng dấu phẩy)</label><input type="text" id="postTags" class="form-input" placeholder="VD: kpop, album, concert"></div><div class="form-group"><label>Ảnh & Video (có thể chọn nhiều)</label><div><button type="button" class="btn-secondary" id="postUploadBtn">+ Thêm ảnh/video</button><input type="file" id="postFileInput" accept="image/*,video/*" multiple style="display:none"><div id="postMediaPreview" style="display:flex;flex-wrap:wrap;gap:10px;margin-top:8px;"></div><input type="hidden" id="postImage"></div><small style="color:#888">Ảnh đầu là ảnh đại diện.</small></div><div class="form-group"><label>Tóm tắt (excerpt)</label><textarea id="postExcerpt" rows="2" class="form-input"></textarea></div><div class="form-group"><label>Nội dung *</label><textarea id="postContent" rows="10" class="form-input"></textarea></div><div class="form-group"><label>Trạng thái</label><select id="postStatus" class="form-input"><option value="draft">Bản nháp</option><option value="published">Xuất bản</option><option value="archived">Lưu trữ</option></select></div><div class="form-group"><label>Link video nhúng (YouTube, TikTok, Vimeo — mỗi link 1 dòng)</label><textarea id="postVideoLinks" rows="2" class="form-input" placeholder="https://youtube.com/watch?v=..."></textarea></div><div class="form-row-2"><div class="form-group"><label>Facebook</label><input id="postFacebook" class="form-input" placeholder="https://facebook.com/..."></div><div class="form-group"><label>Zalo</label><input id="postZalo" class="form-input" placeholder="https://zalo.me/..."></div></div><div class="form-row-2"><div class="form-group"><label>TikTok</label><input id="postTiktok" class="form-input" placeholder="https://tiktok.com/..."></div><div class="form-group"><label>YouTube</label><input id="postYoutube" class="form-input" placeholder="https://youtube.com/..."></div></div></div><div class="modal-footer"><button class="btn-secondary" onclick="closePostModal()">${t('cancel')}</button><button class="btn-primary" id="savePostBtn">${t('save')}</button></div></div></div>
   `;
   document.getElementById('postStatusFilter')?.addEventListener('change', filterPosts);
   document.getElementById('addPostBtn')?.addEventListener('click', () => openPostModal());
   document.getElementById('savePostBtn')?.addEventListener('click', savePost);
   const uploadBtn = document.getElementById('postUploadBtn');
   const fileInput = document.getElementById('postFileInput');
-  const preview = document.getElementById('postPreview');
-  const imageInput = document.getElementById('postImage');
   if (uploadBtn && fileInput) {
     uploadBtn.onclick = () => fileInput.click();
     fileInput.onchange = async (e) => {
-      const file = e.target.files[0];
-      if (!file) return;
-      if (preview) preview.innerHTML = '<div>Uploading...</div>';
-      try {
-        const url = await uploadFile(file, 'products');
-        if (imageInput) imageInput.value = url;
-        if (preview) preview.innerHTML = `<img src="${getImageUrl(url)}" style="max-width:200px; border-radius:12px;">`;
-        showToast('Image uploaded', 'success');
-      } catch(err) {
-        if (preview) preview.innerHTML = '<div style="color:red">Upload failed</div>';
-        showToast('Upload failed', 'error');
+      const files = Array.from(e.target.files || []);
+      if (!files.length) return;
+      showToast('Đang tải lên...', 'success');
+      for (const file of files) {
+        try { const url = await uploadFile(file, 'products'); postMediaList.push({ url, type: file.type.startsWith('video') ? 'video' : 'image' }); renderPostMedia(); }
+        catch (err) { showToast('Tải lỗi: ' + file.name, 'error'); }
       }
+      fileInput.value = '';
+      showToast('Đã tải lên ' + files.length + ' tệp', 'success');
     };
   }
   loadPosts();   // TẢI dữ liệu bài viết từ API rồi render (trước đây bị thiếu nên bảng luôn trống)
@@ -807,9 +821,11 @@ function openPostModal(post = null) {
     document.getElementById('postZalo').value = sl.zalo || '';
     document.getElementById('postTiktok').value = sl.tiktok || '';
     document.getElementById('postYoutube').value = sl.youtube || '';
-    document.getElementById('postVideoLinks').value = (post.videoLinks || []).join('\n');
-    const preview = document.getElementById('postPreview');
-    if (preview && post.featuredImage) preview.innerHTML = `<img src="${getImageUrl(post.featuredImage)}" style="max-width:200px; border-radius:12px;">`;
+    postMediaList = [];
+    (post.images && post.images.length ? post.images : (post.featuredImage ? [post.featuredImage] : [])).forEach(u => { if (u) postMediaList.push({ url: u, type: isVideoUrl(u) ? 'video' : 'image' }); });
+    (post.videoLinks || []).forEach(u => { if (u && isVideoUrl(u)) postMediaList.push({ url: u, type: 'video' }); });
+    document.getElementById('postVideoLinks').value = (post.videoLinks || []).filter(u => !isVideoUrl(u)).join('\n');
+    renderPostMedia();
   } else {
     modalTitle.textContent = 'Viết bài mới';
     document.getElementById('postTitle').value = '';
@@ -817,11 +833,11 @@ function openPostModal(post = null) {
     document.getElementById('postTags').value = '';
     document.getElementById('postExcerpt').value = '';
     document.getElementById('postContent').value = '';
-    document.getElementById('postStatus').value = 'draft';
+    document.getElementById('postStatus').value = 'published'; // mặc định Xuất bản để bài hiện ngay trên blog
     document.getElementById('postImage').value = '';
     ['postFacebook','postZalo','postTiktok','postYoutube','postVideoLinks'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
-    const preview = document.getElementById('postPreview');
-    if (preview) preview.innerHTML = '';
+    postMediaList = [];
+    renderPostMedia();
   }
   modal.style.display = 'flex';
 }
@@ -837,8 +853,11 @@ async function savePost() {
     tiktok: document.getElementById('postTiktok')?.value.trim() || '',
     youtube: document.getElementById('postYoutube')?.value.trim() || ''
   };
-  const videoLinks = (document.getElementById('postVideoLinks')?.value || '').split(/[\n,]/).map(s => s.trim()).filter(Boolean);
-  const data = { title, content, excerpt: document.getElementById('postExcerpt').value.trim(), category: document.getElementById('postCategory').value, tags, featuredImage: document.getElementById('postImage').value, status: document.getElementById('postStatus').value, socialLinks, videoLinks };
+  const embedLinks = (document.getElementById('postVideoLinks')?.value || '').split(/[\n,]/).map(s => s.trim()).filter(Boolean);
+  const images = postMediaList.filter(m => m.type === 'image').map(m => m.url);
+  const uploadedVideos = postMediaList.filter(m => m.type === 'video').map(m => m.url);
+  const videoLinks = [...embedLinks, ...uploadedVideos];
+  const data = { title, content, excerpt: document.getElementById('postExcerpt').value.trim(), category: document.getElementById('postCategory').value, tags, featuredImage: images[0] || document.getElementById('postImage').value || '', images, status: document.getElementById('postStatus').value, socialLinks, videoLinks };
   try {
     showLoading();
     let url = `${API_URL}/posts`, method = 'POST';

@@ -158,8 +158,10 @@ function setupImageUpload(btnId, fileId, previewId, hiddenId, type) {
       const url = await uploadFile(f, type);
       if (hidden) hidden.value = url;
       const src = (typeof getImageUrl === 'function') ? getImageUrl(url) : url;
-      if (preview) preview.innerHTML = `<img src="${src}" style="max-width:160px;border-radius:10px;border:1px solid var(--border);">`;
-      showToast('Đã tải ảnh lên');
+      if (preview) preview.innerHTML = isVideoUrl(url)
+        ? `<video src="${src}" controls style="max-width:200px;border-radius:10px;border:1px solid var(--border);"></video>`
+        : `<img src="${src}" style="max-width:160px;border-radius:10px;border:1px solid var(--border);">`;
+      showToast('Đã tải lên');
     } catch (err) {
       if (preview) preview.innerHTML = '<small style="color:#dc2626">Tải ảnh thất bại</small>';
       if (err.message !== 'Unauthorized') showToast('Tải ảnh thất bại', 'error');
@@ -173,7 +175,9 @@ function showImagePreview(previewId, url) {
   if (!preview) return;
   if (!url) { preview.innerHTML = ''; return; }
   const src = (typeof getImageUrl === 'function') ? getImageUrl(url) : url;
-  preview.innerHTML = `<img src="${src}" style="max-width:160px;border-radius:10px;border:1px solid var(--border);">`;
+  preview.innerHTML = isVideoUrl(url)
+    ? `<video src="${src}" controls style="max-width:200px;border-radius:10px;border:1px solid var(--border);"></video>`
+    : `<img src="${src}" style="max-width:160px;border-radius:10px;border:1px solid var(--border);">`;
 }
 
 async function loadData() {
@@ -330,6 +334,25 @@ function renderProductOptions() {
 window.updateOptionName = (i, v) => { if (productOptionsList[i]) productOptionsList[i].name = v; };
 window.updateOptionValues = (i, v) => { if (productOptionsList[i]) productOptionsList[i].values = v.split(',').map(s => s.trim()).filter(Boolean); };
 window.removeProductOption = (i) => { productOptionsList.splice(i, 1); renderProductOptions(); };
+
+// ── Media nhiều ảnh + video cho BÀI VIẾT ──
+let postMediaList = [];
+function renderPostMedia() {
+  const box = document.getElementById('postMediaPreview');
+  if (!box) return;
+  box.innerHTML = postMediaList.map((m, i) => {
+    const src = pImgUrl(m.url);
+    const thumb = m.type === 'video'
+      ? `<video src="${src}" muted style="width:74px;height:74px;object-fit:cover;border-radius:8px;border:1px solid #ddd;"></video>`
+      : `<img src="${src}" style="width:74px;height:74px;object-fit:cover;border-radius:8px;border:1px solid #ddd;">`;
+    const tag = i === 0 ? '<span style="position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,.6);color:#fff;font-size:9px;text-align:center;border-radius:0 0 8px 8px;">Đại diện</span>' : '';
+    return `<div style="position:relative;width:74px;height:74px;">${thumb}${tag}<button type="button" onclick="removePostMedia(${i})" style="position:absolute;top:-7px;right:-7px;background:#dc2626;color:#fff;border:none;border-radius:50%;width:20px;height:20px;cursor:pointer;font-size:12px;line-height:1;">×</button></div>`;
+  }).join('') || '<small style="color:#888">Chưa có ảnh/video nào</small>';
+  const firstImg = postMediaList.find(m => m.type === 'image');
+  const imgInput = document.getElementById('postImage');
+  if (imgInput) imgInput.value = firstImg ? firstImg.url : '';
+}
+window.removePostMedia = (i) => { postMediaList.splice(i, 1); renderPostMedia(); };
 
 async function saveProduct(editingId) {
   const data = {
@@ -648,7 +671,7 @@ function renderBanners() {
         <div class="modal-body">
           <div class="form-group"><label>${t('title')}</label><input id="bannerTitle" class="form-input"></div>
           <div class="form-group"><label>${t('subtitle')}</label><input id="bannerSubtitle" class="form-input"></div>
-          <div class="form-group"><label>${t('image')}</label><button type="button" class="btn-secondary" id="bannerUploadBtn">Chọn ảnh từ máy</button><input type="file" id="bannerFileInput" accept="image/*" style="display:none"><div id="bannerPreview" style="margin-top:8px;"></div><input type="hidden" id="bannerImage"></div>
+          <div class="form-group"><label>Ảnh hoặc Video (1 tệp)</label><button type="button" class="btn-secondary" id="bannerUploadBtn">Chọn ảnh/video từ máy</button><input type="file" id="bannerFileInput" accept="image/*,video/*" style="display:none"><div id="bannerPreview" style="margin-top:8px;"></div><input type="hidden" id="bannerImage"></div>
           <div class="form-group"><label>Link Type</label><select id="bannerLinkType" class="form-input"><option value="product">Product</option><option value="category">Category</option><option value="custom">Custom URL</option></select></div>
           <div class="form-group"><label>Link Value</label><input id="bannerLinkValue" class="form-input" placeholder="Product ID, Category, or URL"></div>
           <div class="form-group"><label>${t('order')}</label><input id="bannerOrder" type="number" class="form-input" value="0"></div>
@@ -909,7 +932,7 @@ function renderPosts() {
         <div class="form-group"><label>Danh mục</label><select id="postCategory" class="form-input"><option value="news">News</option><option value="event">Event</option><option value="guide">Guide</option><option value="review">Review</option><option value="announcement">Announcement</option><option value="update">Update</option></select></div>
         <div class="form-group"><label>Trạng thái</label><select id="postStatus" class="form-input"><option value="published">Xuất bản</option><option value="draft">Nháp</option></select></div>
       </div>
-      <div class="form-group"><label>Ảnh đại diện</label><button type="button" class="btn-secondary" id="postUploadBtn">Chọn ảnh từ máy</button><input type="file" id="postFileInput" accept="image/*" style="display:none"><div id="postPreview" style="margin-top:8px;"></div><input type="hidden" id="postImage"></div>
+      <div class="form-group"><label>Ảnh & Video (có thể chọn nhiều)</label><button type="button" class="btn-secondary" id="postUploadBtn">+ Thêm ảnh/video</button><input type="file" id="postFileInput" accept="image/*,video/*" multiple style="display:none"><div id="postMediaPreview" style="display:flex;flex-wrap:wrap;gap:10px;margin-top:8px;"></div><input type="hidden" id="postImage"><small style="color:#888;display:block;margin-top:4px;">Ảnh đầu là ảnh đại diện.</small></div>
       <div class="form-group"><label>Tags (cách nhau bằng dấu phẩy)</label><input id="postTags" class="form-input" placeholder="kpop, album"></div>
       <div class="form-group"><label>Tóm tắt</label><textarea id="postExcerpt" rows="2" class="form-input"></textarea></div>
       <div class="form-group"><label>Nội dung *</label><textarea id="postContent" rows="8" class="form-input"></textarea></div>
@@ -943,11 +966,14 @@ function renderPosts() {
     document.getElementById('postCategory').value = p.category || 'news';
     document.getElementById('postStatus').value = p.status || 'published';
     document.getElementById('postImage').value = p.featuredImage || '';
-    showImagePreview('postPreview', p.featuredImage);
+    postMediaList = [];
+    (p.images && p.images.length ? p.images : (p.featuredImage ? [p.featuredImage] : [])).forEach(u => { if (u) postMediaList.push({ url: u, type: isVideoUrl(u) ? 'video' : 'image' }); });
+    (p.videoLinks || []).forEach(u => { if (u && isVideoUrl(u)) postMediaList.push({ url: u, type: 'video' }); });
+    renderPostMedia();
     document.getElementById('postTags').value = (p.tags || []).join(', ');
     document.getElementById('postExcerpt').value = p.excerpt || '';
     document.getElementById('postContent').value = p.content || '';
-    document.getElementById('postVideoLinks').value = (p.videoLinks || []).join('\n');
+    document.getElementById('postVideoLinks').value = (p.videoLinks || []).filter(u => !isVideoUrl(u)).join('\n');
     const s = p.socialLinks || {};
     document.getElementById('postFacebook').value = s.facebook || '';
     document.getElementById('postZalo').value = s.zalo || '';
@@ -967,13 +993,28 @@ function renderPosts() {
     window._editingPostId = null;
     document.getElementById('postModalTitle').innerText = 'Bài viết mới';
     ['postTitle', 'postImage', 'postTags', 'postExcerpt', 'postContent', 'postVideoLinks', 'postFacebook', 'postZalo', 'postTiktok', 'postYoutube'].forEach(i => { const el = document.getElementById(i); if (el) el.value = ''; });
-    showImagePreview('postPreview', '');
+    postMediaList = [];
+    renderPostMedia();
     document.getElementById('postCategory').value = 'news';
     document.getElementById('postStatus').value = 'published';
     document.getElementById('postModal').style.display = 'flex';
   };
   document.getElementById('savePostBtn').onclick = savePost;
-  setupImageUpload('postUploadBtn', 'postFileInput', 'postPreview', 'postImage', 'posts');
+  const _postUp = document.getElementById('postUploadBtn'), _postFile = document.getElementById('postFileInput');
+  if (_postUp && _postFile) {
+    _postUp.onclick = () => _postFile.click();
+    _postFile.onchange = async (e) => {
+      const files = Array.from(e.target.files || []);
+      if (!files.length) return;
+      showToast('Đang tải lên...');
+      for (const file of files) {
+        try { const url = await uploadFile(file, 'posts'); postMediaList.push({ url, type: file.type.startsWith('video') ? 'video' : 'image' }); renderPostMedia(); }
+        catch (err) { if (err.message !== 'Unauthorized') showToast('Tải lỗi: ' + file.name, 'error'); }
+      }
+      _postFile.value = '';
+      showToast('Đã tải lên ' + files.length + ' tệp');
+    };
+  }
   document.getElementById('postStatusFilter')?.addEventListener('change', renderList);
   renderList();
 }
@@ -986,10 +1027,14 @@ async function savePost() {
     title, content,
     category: document.getElementById('postCategory').value,
     status: document.getElementById('postStatus').value,
-    featuredImage: document.getElementById('postImage').value.trim(),
+    featuredImage: (postMediaList.find(m => m.type === 'image') || {}).url || document.getElementById('postImage').value.trim() || '',
+    images: postMediaList.filter(m => m.type === 'image').map(m => m.url),
     excerpt: document.getElementById('postExcerpt').value.trim(),
     tags: document.getElementById('postTags').value.split(',').map(s => s.trim()).filter(Boolean),
-    videoLinks: (document.getElementById('postVideoLinks').value || '').split(/[\n,]/).map(s => s.trim()).filter(Boolean),
+    videoLinks: [
+      ...((document.getElementById('postVideoLinks').value || '').split(/[\n,]/).map(s => s.trim()).filter(Boolean)),
+      ...postMediaList.filter(m => m.type === 'video').map(m => m.url)
+    ],
     socialLinks: {
       facebook: document.getElementById('postFacebook').value.trim(),
       zalo: document.getElementById('postZalo').value.trim(),
