@@ -36,8 +36,11 @@ function escapeHtml(str) { if (!str) return ''; return str.replace(/[&<>]/g, m =
 
 function getImageUrl(path) {
   if(!path) return 'https://picsum.photos/400/200?random=1';
+  // Bỏ host localhost/127.0.0.1 trong dữ liệu cũ -> đường dẫn tương đối (chạy đúng trên hosting)
+  path = path.replace(/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?/i, '');
   if(path.startsWith('http')) return path;
-  if(path.startsWith('/')) return `${path}`;
+  if(path.startsWith('/uploads/')) return path.replace('/uploads', '/image');
+  if(path.startsWith('/')) return path;
   return `/${path}`;
 }
 

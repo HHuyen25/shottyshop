@@ -337,10 +337,14 @@ router.delete('/:id', verifyToken, isStaffOrAdmin, async (req, res) => {
 // Helper function
 function getFullImageUrl(path) {
   if (!path) return null;
+  // Bỏ host localhost/127.0.0.1 cũ (nếu có) -> trả ĐƯỜNG DẪN TƯƠNG ĐỐI để chạy đúng trên mọi domain (localhost lẫn hosting)
+  path = path.replace(/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?/i, '');
   if (path.startsWith('http://') || path.startsWith('https://')) return path;
-  if (path.startsWith('/image/')) return `http://localhost:3000${path}`;
-  if (path.startsWith('image/')) return `http://localhost:3000/${path}`;
-  return `http://localhost:3000/image/products/${path}`;
+  if (path.startsWith('/uploads/')) return path.replace('/uploads', '/image');
+  if (path.startsWith('/image/')) return path;
+  if (path.startsWith('image/')) return `/${path}`;
+  if (path.startsWith('/')) return path;
+  return `/image/products/${path}`;
 }
 
 module.exports = router;
