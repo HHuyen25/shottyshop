@@ -69,8 +69,44 @@ async function uploadFile(file, type) {
   const data = await res.json(); return data.url; 
 }
 
-function logout() { 
-  localStorage.removeItem('authToken'); localStorage.removeItem('currentUserId'); 
+// ==================== MEDIA (nhiều ảnh + video) & PHÂN LOẠI (options) ====================
+let productMediaList = [];   // [{url, type:'image'|'video'}]
+let productOptionsList = []; // [{name, values:[]}]
+function isVideoUrl(u){ return /\.(mp4|webm|mov|ogg)(\?|$)/i.test(u || ''); }
+
+function renderProductMedia() {
+  const box = document.getElementById('productMediaPreview');
+  if (!box) return;
+  box.innerHTML = productMediaList.map((m, i) => {
+    const src = getImageUrl(m.url);
+    const thumb = m.type === 'video'
+      ? `<video src="${src}" muted style="width:74px;height:74px;object-fit:cover;border-radius:8px;border:1px solid #ddd;"></video>`
+      : `<img src="${src}" style="width:74px;height:74px;object-fit:cover;border-radius:8px;border:1px solid #ddd;">`;
+    const tag = i === 0 ? '<span style="position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,.6);color:#fff;font-size:9px;text-align:center;border-radius:0 0 8px 8px;">Đại diện</span>' : '';
+    return `<div style="position:relative;width:74px;height:74px;">${thumb}${tag}<button type="button" onclick="removeProductMedia(${i})" title="Xóa" style="position:absolute;top:-7px;right:-7px;background:#dc2626;color:#fff;border:none;border-radius:50%;width:20px;height:20px;cursor:pointer;font-size:12px;line-height:1;">×</button></div>`;
+  }).join('') || '<small style="color:#888">Chưa có ảnh/video nào</small>';
+  const firstImg = productMediaList.find(m => m.type === 'image');
+  const imgInput = document.getElementById('productImage');
+  if (imgInput) imgInput.value = firstImg ? firstImg.url : (productMediaList[0] ? productMediaList[0].url : '');
+}
+window.removeProductMedia = (i) => { productMediaList.splice(i, 1); renderProductMedia(); };
+
+function renderProductOptions() {
+  const box = document.getElementById('productOptionsEditor');
+  if (!box) return;
+  box.innerHTML = productOptionsList.map((o, i) => `
+    <div style="display:flex;gap:6px;margin-bottom:6px;align-items:center;">
+      <input class="form-input" style="flex:0 0 32%;" placeholder="Tên (VD: Size)" value="${(o.name||'').replace(/"/g,'&quot;')}" oninput="updateOptionName(${i}, this.value)">
+      <input class="form-input" style="flex:1;" placeholder="Giá trị, cách nhau dấu phẩy (VD: S, M, L)" value="${(o.values||[]).join(', ').replace(/"/g,'&quot;')}" oninput="updateOptionValues(${i}, this.value)">
+      <button type="button" onclick="removeProductOption(${i})" class="btn-delete" style="flex:0 0 auto;padding:6px 10px;">×</button>
+    </div>`).join('') || '<small style="color:#888">Chưa có phân loại. VD: Size = S,M,L · Màu = Đỏ,Xanh</small>';
+}
+window.updateOptionName = (i, v) => { if (productOptionsList[i]) productOptionsList[i].name = v; };
+window.updateOptionValues = (i, v) => { if (productOptionsList[i]) productOptionsList[i].values = v.split(',').map(s => s.trim()).filter(Boolean); };
+window.removeProductOption = (i) => { productOptionsList.splice(i, 1); renderProductOptions(); };
+
+function logout() {
+  localStorage.removeItem('authToken'); localStorage.removeItem('currentUserId');
   showToast('Logged out successfully');
   setTimeout(() => window.location.href = '/crud/login.html', 500);
 }
@@ -232,7 +268,7 @@ function renderProducts() {
   document.getElementById('pageContent').innerHTML = `
     <div class="toolbar"><h2>${t('products')}</h2><div><input type="text" id="productSearch" class="search-input" placeholder="${t('search')}"><select id="categoryFilter" class="filter-select"><option value="all">${t('all')}</option><option value="Album">Album</option><option value="Card">Card</option><option value="Áo">Áo</option><option value="Sản phẩm liên quan">Sản phẩm liên quan</option></select><button class="btn-primary" id="addProductBtn" style="margin-left:10px;">+ ${t('add')}</button></div></div>
     <div class="table-container"><table class="simple-table"><thead><tr><th>${t('image')}</th><th>${t('product_name')}</th><th>${t('price')}</th><th>${t('category')}</th><th>${t('stock')}</th><th>${t('preorder')}</th><th>${t('hanteo')}</th><th>${t('actions')}</th></tr></thead><tbody id="productsTableBody"></tbody></table></div>
-    <div id="productModal" class="modal"><div class="modal-content"><div class="modal-header"><h3 id="productModalTitle">${t('add')} ${t('products')}</h3><span class="close" onclick="closeProductModal()">&times;</span></div><div class="modal-body"><div class="form-group"><label>${t('product_name')}</label><input type="text" id="productName" class="form-input"></div><div class="form-row-2"><div class="form-group"><label>${t('price')}</label><input type="number" id="productPrice" class="form-input" step="0.01"></div><div class="form-group"><label>${t('stock')}</label><input type="number" id="productStock" class="form-input" value="10"></div></div><div class="form-row-2"><div class="form-group"><label>${t('category')}</label><select id="productCategory" class="form-input"><option value="Album">Album</option><option value="Card">Card</option><option value="Áo">Áo</option><option value="Sản phẩm liên quan">Sản phẩm liên quan</option></select></div><div class="form-group"><label>${t('image')}</label><div><button type="button" class="btn-secondary" id="productUploadBtn">${t('choose_file')}</button><input type="file" id="productFileInput" accept="image/*" style="display:none"><div id="productPreview"></div><input type="hidden" id="productImage"></div></div></div><div class="form-group"><label>${t('description')}</label><textarea id="productDescription" rows="3" class="form-input"></textarea></div><div class="form-group"><label>Link video / nhúng — YouTube, TikTok, Facebook, Zalo (mỗi link 1 dòng)</label><textarea id="productVideoLinks" rows="3" class="form-input" placeholder="https://youtube.com/watch?v=..."></textarea></div><div class="form-group"><label>Thông số kỹ thuật</label><div class="form-row-2"><input id="specType" class="form-input" placeholder="Loại (Type)"><input id="specBrand" class="form-input" placeholder="Thương hiệu (Brand)"></div><div class="form-row-2" style="margin-top:10px"><input id="specCountry" class="form-input" placeholder="Xuất xứ (Country)"><input id="specSize" class="form-input" placeholder="Kích thước (Size)"></div><div class="form-row-2" style="margin-top:10px"><input id="specWeight" class="form-input" placeholder="Trọng lượng (Weight)"><input id="specMaterial" class="form-input" placeholder="Chất liệu (Material)"></div></div><div class="form-group"><label>Thành viên</label><select id="productMember" class="form-input"><option value="">— Không / Nhóm —</option><option value="OHYUL">OHYUL</option><option value="RYUL">RYUL</option><option value="WOOJIN">WOOJIN</option><option value="LOUIS">LOUIS</option><option value="GROUP">GROUP (cả nhóm)</option></select></div><div class="checkbox-group"><label><input type="checkbox" id="productPreorder"> ${t('preorder')}</label><label><input type="checkbox" id="productHanteo"> ${t('hanteo')}</label><label><input type="checkbox" id="productFeatured"> Nổi bật</label></div></div><div class="modal-footer"><button class="btn-secondary" onclick="closeProductModal()">${t('cancel')}</button><button class="btn-primary" id="saveProductBtn">${t('save')}</button></div></div></div>
+    <div id="productModal" class="modal"><div class="modal-content"><div class="modal-header"><h3 id="productModalTitle">${t('add')} ${t('products')}</h3><span class="close" onclick="closeProductModal()">&times;</span></div><div class="modal-body"><div class="form-group"><label>${t('product_name')}</label><input type="text" id="productName" class="form-input"></div><div class="form-row-2"><div class="form-group"><label>${t('price')}</label><input type="number" id="productPrice" class="form-input" step="0.01"></div><div class="form-group"><label>${t('stock')}</label><input type="number" id="productStock" class="form-input" value="10"></div></div><div class="form-row-2"><div class="form-group"><label>${t('category')}</label><select id="productCategory" class="form-input"><option value="Album">Album</option><option value="Card">Card</option><option value="Áo">Áo</option><option value="Sản phẩm liên quan">Sản phẩm liên quan</option></select></div><div class="form-group"><label>Ảnh & Video (có thể chọn nhiều)</label><div><button type="button" class="btn-secondary" id="productUploadBtn">+ Thêm ảnh/video</button><input type="file" id="productFileInput" accept="image/*,video/*" multiple style="display:none"><div id="productMediaPreview" style="display:flex;flex-wrap:wrap;gap:10px;margin-top:8px;"></div><input type="hidden" id="productImage"></div><small style="color:#888">Ảnh đầu tiên là ảnh đại diện. Hỗ trợ nhiều ảnh + video (mp4/webm).</small></div></div><div class="form-group"><label>${t('description')}</label><textarea id="productDescription" rows="3" class="form-input"></textarea></div><div class="form-group"><label>Link video / nhúng — YouTube, TikTok, Facebook, Zalo (mỗi link 1 dòng)</label><textarea id="productVideoLinks" rows="3" class="form-input" placeholder="https://youtube.com/watch?v=..."></textarea></div><div class="form-group"><label>Thông số kỹ thuật</label><div class="form-row-2"><input id="specType" class="form-input" placeholder="Loại (Type)"><input id="specBrand" class="form-input" placeholder="Thương hiệu (Brand)"></div><div class="form-row-2" style="margin-top:10px"><input id="specCountry" class="form-input" placeholder="Xuất xứ (Country)"><input id="specSize" class="form-input" placeholder="Kích thước (Size)"></div><div class="form-row-2" style="margin-top:10px"><input id="specWeight" class="form-input" placeholder="Trọng lượng (Weight)"><input id="specMaterial" class="form-input" placeholder="Chất liệu (Material)"></div></div><div class="form-group"><label>Phân loại (Size, Màu... giống Shopee)</label><div id="productOptionsEditor"></div><button type="button" class="btn-secondary" id="addOptionBtn" style="margin-top:8px;">+ Thêm phân loại</button></div><div class="form-group"><label>Thành viên</label><select id="productMember" class="form-input"><option value="">— Không / Nhóm —</option><option value="OHYUL">OHYUL</option><option value="RYUL">RYUL</option><option value="WOOJIN">WOOJIN</option><option value="LOUIS">LOUIS</option><option value="GROUP">GROUP (cả nhóm)</option></select></div><div class="checkbox-group"><label><input type="checkbox" id="productPreorder"> ${t('preorder')}</label><label><input type="checkbox" id="productHanteo"> ${t('hanteo')}</label><label><input type="checkbox" id="productFeatured"> Nổi bật</label></div></div><div class="modal-footer"><button class="btn-secondary" onclick="closeProductModal()">${t('cancel')}</button><button class="btn-primary" id="saveProductBtn">${t('save')}</button></div></div></div>
   `;
   let editingProductId = null;
   function filterProducts() {
@@ -272,8 +308,16 @@ function renderProducts() {
       document.getElementById('productPreorder').checked = p.preorder;
       document.getElementById('productHanteo').checked = p.hanteo;
       document.getElementById('productImage').value = p.image || '';
-      const preview = document.getElementById('productPreview');
-      if (preview) preview.innerHTML = p.image ? `<img src="${getImageUrl(p.image)}" style="max-width:150px;border-radius:12px;">` : '';
+      // Nạp nhiều ảnh + video vào danh sách media
+      productMediaList = [];
+      (p.images && p.images.length ? p.images : (p.image ? [p.image] : [])).forEach(u => { if (u) productMediaList.push({ url: u, type: isVideoUrl(u) ? 'video' : 'image' }); });
+      (p.videoLinks || []).forEach(u => { if (u && isVideoUrl(u)) productMediaList.push({ url: u, type: 'video' }); });
+      // Textarea chỉ giữ link nhúng (YouTube/TikTok...), video upload đã nằm trong media
+      document.getElementById('productVideoLinks').value = (p.videoLinks || []).filter(u => !isVideoUrl(u)).join('\n');
+      // Nạp phân loại
+      productOptionsList = (p.options || []).map(o => ({ name: o.name || '', values: [...(o.values || [])] }));
+      renderProductMedia();
+      renderProductOptions();
       document.getElementById('productModal').style.display = 'flex';
     }
   };
@@ -297,8 +341,10 @@ function renderProducts() {
       const fEl0 = document.getElementById('productFeatured'); if (fEl0) fEl0.checked = false;
       document.getElementById('productPreorder').checked = false;
       document.getElementById('productHanteo').checked = false;
-      const preview = document.getElementById('productPreview');
-      if (preview) preview.innerHTML = '';
+      productMediaList = [];
+      productOptionsList = [];
+      renderProductMedia();
+      renderProductOptions();
       document.getElementById('productModal').style.display = 'flex';
     };
   }
@@ -315,8 +361,13 @@ function renderProducts() {
         description: document.getElementById('productDescription').value,
         preorder: document.getElementById('productPreorder').checked,
         hanteo: document.getElementById('productHanteo').checked,
-        image: document.getElementById('productImage').value,
-        videoLinks: (document.getElementById('productVideoLinks').value || '').split(/[\n,]/).map(s => s.trim()).filter(Boolean),
+        image: (productMediaList.find(m => m.type === 'image') || productMediaList[0] || {}).url || document.getElementById('productImage').value || '',
+        images: productMediaList.filter(m => m.type === 'image').map(m => m.url),
+        videoLinks: [
+          ...((document.getElementById('productVideoLinks').value || '').split(/[\n,]/).map(s => s.trim()).filter(Boolean)),
+          ...productMediaList.filter(m => m.type === 'video').map(m => m.url)
+        ],
+        options: productOptionsList.filter(o => (o.name || '').trim() && (o.values || []).length).map(o => ({ name: o.name.trim(), values: o.values })),
         specifications: {
           type: document.getElementById('specType')?.value.trim() || '',
           brand: document.getElementById('specBrand')?.value.trim() || '',
@@ -342,25 +393,25 @@ function renderProducts() {
   }
   const uploadBtn = document.getElementById('productUploadBtn');
   const fileInput = document.getElementById('productFileInput');
-  const preview = document.getElementById('productPreview');
-  const imageInput = document.getElementById('productImage');
   if (uploadBtn && fileInput) {
     uploadBtn.onclick = () => fileInput.click();
     fileInput.onchange = async (e) => {
-      const file = e.target.files[0];
-      if (!file) return;
-      if (preview) preview.innerHTML = '<div>Uploading...</div>';
-      try {
-        const url = await uploadFile(file, 'products');
-        if (imageInput) imageInput.value = url;
-        if (preview) preview.innerHTML = `<img src="${getImageUrl(url)}" style="max-width:150px;border-radius:12px;"><div>✓ Uploaded</div>`;
-        showToast('Image uploaded', 'success');
-      } catch (err) {
-        if (preview) preview.innerHTML = '<div style="color:red">Upload failed</div>';
-        showToast('Upload failed', 'error');
+      const files = Array.from(e.target.files || []);
+      if (!files.length) return;
+      showToast('Đang tải lên...', 'success');
+      for (const file of files) {
+        try {
+          const url = await uploadFile(file, 'products');
+          productMediaList.push({ url, type: file.type.startsWith('video') ? 'video' : 'image' });
+          renderProductMedia();
+        } catch (err) { showToast('Tải lỗi: ' + file.name, 'error'); }
       }
+      fileInput.value = '';
+      showToast('Đã tải lên ' + files.length + ' tệp', 'success');
     };
   }
+  const addOptionBtn = document.getElementById('addOptionBtn');
+  if (addOptionBtn) addOptionBtn.onclick = () => { productOptionsList.push({ name: '', values: [] }); renderProductOptions(); };
   const searchInput = document.getElementById('productSearch'); if (searchInput) searchInput.addEventListener('keyup', filterProducts);
   const filterSelect = document.getElementById('categoryFilter'); if (filterSelect) filterSelect.addEventListener('change', filterProducts);
   filterProducts();

@@ -248,7 +248,7 @@
         cart.forEach(item => {
           const itemTotal = item.price * item.quantity;
           subtotal += itemTotal;
-          html += `<div class="order-item"><span>${escapeHtml(item.name)} x ${item.quantity}</span><span>${convertPrice(itemTotal)}</span></div>`;
+          html += `<div class="order-item"><span>${escapeHtml(item.name)}${item.options && Object.keys(item.options).length ? ' (' + Object.entries(item.options).map(([k,v])=>k+': '+v).join(', ') + ')' : ''} x ${item.quantity}</span><span>${convertPrice(itemTotal)}</span></div>`;
         });
         html += `<div class="order-total" style="margin-top:1rem;">Tạm tính: ${convertPrice(subtotal)}</div>`;
         container.innerHTML = html;
@@ -258,7 +258,7 @@
         const subtotal = getSubtotal();
         let itemsHtml = `<div style="display:flex; justify-content:space-between; border-bottom:2px solid #eee; padding-bottom:0.5rem; font-weight:bold;"><span>Đơn hàng</span><span>Thành tiền</span></div>`;
         cart.forEach(item => {
-          itemsHtml += `<div class="order-item"><span>${escapeHtml(item.name)} x ${item.quantity}</span><span>${convertPrice(item.price * item.quantity)}</span></div>`;
+          itemsHtml += `<div class="order-item"><span>${escapeHtml(item.name)}${item.options && Object.keys(item.options).length ? ' (' + Object.entries(item.options).map(([k,v])=>k+': '+v).join(', ') + ')' : ''} x ${item.quantity}</span><span>${convertPrice(item.price * item.quantity)}</span></div>`;
         });
         let discountHtml = '';
         if (appliedDiscount > 0 && selectedCoupon) {
@@ -500,7 +500,8 @@ function buildOrderData() {
     customerEmail: document.getElementById('email').value.trim(),
     customerPhone: document.getElementById('phone').value.trim(),
     items: cart.map(item => ({
-      productId: item.id, name: item.name,
+      productId: item.id,
+      name: item.name + (item.options && Object.keys(item.options).length ? ' (' + Object.entries(item.options).map(([k,v])=>k+': '+v).join(', ') + ')' : ''),
       price: parseFloat(item.price), quantity: parseInt(item.quantity),
       image: item.image || ''
     })),

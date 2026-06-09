@@ -91,7 +91,7 @@
         itemsHtml += `
           <tr data-idx="${idx}">
             <td><img src="${imgUrl}" class="cart-item-img" onerror="this.src='https://picsum.photos/80/80'"></td>
-            <td><strong>${escapeHtml(item.name)}</strong></td>
+            <td><strong>${escapeHtml(item.name)}</strong>${item.options && Object.keys(item.options).length ? `<br><small style="color:#888">${Object.entries(item.options).map(([k,v])=>escapeHtml(k+': '+v)).join(' · ')}</small>` : ''}</td>
             <td>${convertPrice(item.price)}</td>
             <td><div class="cart-item-quantity"><button class="quantity-btn minus-btn" data-idx="${idx}" ${item.quantity <= 1 ? 'disabled' : ''}>-</button><span class="qty-value">${item.quantity}</span><button class="quantity-btn plus-btn" data-idx="${idx}" ${item.quantity >= stock ? 'disabled' : ''}>+</button></div>${isOverStock ? `<div class="stock-warning" data-key="only_left">Only ${stock} left!</div>` : ''}</td>
             <td>${convertPrice(itemTotal)}</td>

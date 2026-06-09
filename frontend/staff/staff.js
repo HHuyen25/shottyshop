@@ -294,6 +294,43 @@ async function checkLogin() {
 }
 
 // ========== PRODUCTS ==========
+// ==================== MEDIA (nhiều ảnh + video) & PHÂN LOẠI (options) ====================
+let productMediaList = [];   // [{url, type:'image'|'video'}]
+let productOptionsList = []; // [{name, values:[]}]
+function isVideoUrl(u){ return /\.(mp4|webm|mov|ogg)(\?|$)/i.test(u || ''); }
+function pImgUrl(u){ return (typeof getImageUrl === 'function') ? getImageUrl(u) : u; }
+
+function renderProductMedia() {
+  const box = document.getElementById('productMediaPreview');
+  if (!box) return;
+  box.innerHTML = productMediaList.map((m, i) => {
+    const src = pImgUrl(m.url);
+    const thumb = m.type === 'video'
+      ? `<video src="${src}" muted style="width:74px;height:74px;object-fit:cover;border-radius:8px;border:1px solid #ddd;"></video>`
+      : `<img src="${src}" style="width:74px;height:74px;object-fit:cover;border-radius:8px;border:1px solid #ddd;">`;
+    const tag = i === 0 ? '<span style="position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,.6);color:#fff;font-size:9px;text-align:center;border-radius:0 0 8px 8px;">Đại diện</span>' : '';
+    return `<div style="position:relative;width:74px;height:74px;">${thumb}${tag}<button type="button" onclick="removeProductMedia(${i})" title="Xóa" style="position:absolute;top:-7px;right:-7px;background:#dc2626;color:#fff;border:none;border-radius:50%;width:20px;height:20px;cursor:pointer;font-size:12px;line-height:1;">×</button></div>`;
+  }).join('') || '<small style="color:#888">Chưa có ảnh/video nào</small>';
+  const firstImg = productMediaList.find(m => m.type === 'image');
+  const imgInput = document.getElementById('productImage');
+  if (imgInput) imgInput.value = firstImg ? firstImg.url : (productMediaList[0] ? productMediaList[0].url : '');
+}
+window.removeProductMedia = (i) => { productMediaList.splice(i, 1); renderProductMedia(); };
+
+function renderProductOptions() {
+  const box = document.getElementById('productOptionsEditor');
+  if (!box) return;
+  box.innerHTML = productOptionsList.map((o, i) => `
+    <div style="display:flex;gap:6px;margin-bottom:6px;align-items:center;">
+      <input class="form-input" style="flex:0 0 32%;" placeholder="Tên (VD: Size)" value="${(o.name||'').replace(/"/g,'&quot;')}" oninput="updateOptionName(${i}, this.value)">
+      <input class="form-input" style="flex:1;" placeholder="Giá trị, cách nhau dấu phẩy (VD: S, M, L)" value="${(o.values||[]).join(', ').replace(/"/g,'&quot;')}" oninput="updateOptionValues(${i}, this.value)">
+      <button type="button" onclick="removeProductOption(${i})" class="btn-delete" style="flex:0 0 auto;padding:6px 10px;">×</button>
+    </div>`).join('') || '<small style="color:#888">Chưa có phân loại. VD: Size = S,M,L · Màu = Đỏ,Xanh</small>';
+}
+window.updateOptionName = (i, v) => { if (productOptionsList[i]) productOptionsList[i].name = v; };
+window.updateOptionValues = (i, v) => { if (productOptionsList[i]) productOptionsList[i].values = v.split(',').map(s => s.trim()).filter(Boolean); };
+window.removeProductOption = (i) => { productOptionsList.splice(i, 1); renderProductOptions(); };
+
 async function saveProduct(editingId) {
   const data = {
     name: document.getElementById('productName').value.trim(),
@@ -302,9 +339,14 @@ async function saveProduct(editingId) {
     category: document.getElementById('productCategory').value,
     member: document.getElementById('productMember')?.value || '',
     featured: document.getElementById('productFeatured')?.checked || false,
-    image: document.getElementById('productImage').value.trim(),
+    image: (productMediaList.find(m => m.type === 'image') || productMediaList[0] || {}).url || document.getElementById('productImage').value.trim() || '',
+    images: productMediaList.filter(m => m.type === 'image').map(m => m.url),
     youtubeLink: document.getElementById('productYoutube')?.value.trim() || '',
-    videoLinks: (document.getElementById('productVideoLinks')?.value || '').split(/[\n,]/).map(s => s.trim()).filter(Boolean),
+    videoLinks: [
+      ...((document.getElementById('productVideoLinks')?.value || '').split(/[\n,]/).map(s => s.trim()).filter(Boolean)),
+      ...productMediaList.filter(m => m.type === 'video').map(m => m.url)
+    ],
+    options: productOptionsList.filter(o => (o.name || '').trim() && (o.values || []).length).map(o => ({ name: o.name.trim(), values: o.values })),
     specifications: {
       type: document.getElementById('specType')?.value.trim() || '',
       brand: document.getElementById('specBrand')?.value.trim() || '',
@@ -374,9 +416,14 @@ function editProduct(id) {
     const mEl = document.getElementById('productMember'); if (mEl) mEl.value = p.member || '';
     const fEl = document.getElementById('productFeatured'); if (fEl) fEl.checked = p.featured || false;
     document.getElementById('productImage').value = p.image || '';
-    showImagePreview('productPreview', p.image);
+    productMediaList = [];
+    (p.images && p.images.length ? p.images : (p.image ? [p.image] : [])).forEach(u => { if (u) productMediaList.push({ url: u, type: isVideoUrl(u) ? 'video' : 'image' }); });
+    (p.videoLinks || []).forEach(u => { if (u && isVideoUrl(u)) productMediaList.push({ url: u, type: 'video' }); });
     const ytEl = document.getElementById('productYoutube'); if (ytEl) ytEl.value = p.youtubeLink || '';
-    const vlEl = document.getElementById('productVideoLinks'); if (vlEl) vlEl.value = (p.videoLinks || []).join('\n');
+    const vlEl = document.getElementById('productVideoLinks'); if (vlEl) vlEl.value = (p.videoLinks || []).filter(u => !isVideoUrl(u)).join('\n');
+    productOptionsList = (p.options || []).map(o => ({ name: o.name || '', values: [...(o.values || [])] }));
+    renderProductMedia();
+    renderProductOptions();
     const sp = p.specifications || {};
     ['Type','Brand','Country','Size','Weight','Material'].forEach(k => { const el = document.getElementById('spec' + k); if (el) el.value = sp[k.toLowerCase()] || ''; });
     document.getElementById('productPreorder').checked = p.preorder || false;
@@ -433,7 +480,8 @@ function renderProducts() {
             <div class="form-group"><label>${t('category')}</label><select id="productCategory" class="form-input"><option value="Album">Album</option><option value="Card">Card</option><option value="Áo">Clothing</option><option value="Poster">Poster</option><option value="Photobook">Photobook</option></select></div>
             <div class="form-group"><label>Thành viên</label><select id="productMember" class="form-input"><option value="">— Không / Nhóm —</option><option value="OHYUL">OHYUL</option><option value="RYUL">RYUL</option><option value="WOOJIN">WOOJIN</option><option value="LOUIS">LOUIS</option><option value="GROUP">GROUP (cả nhóm)</option></select></div>
           </div>
-          <div class="form-group"><label>${t('image')}</label><button type="button" class="btn-secondary" id="productUploadBtn">Chọn ảnh từ máy</button><input type="file" id="productFileInput" accept="image/*" style="display:none"><div id="productPreview" style="margin-top:8px;"></div><input type="hidden" id="productImage"></div>
+          <div class="form-group"><label>Ảnh & Video (có thể chọn nhiều)</label><button type="button" class="btn-secondary" id="productUploadBtn">+ Thêm ảnh/video</button><input type="file" id="productFileInput" accept="image/*,video/*" multiple style="display:none"><div id="productMediaPreview" style="display:flex;flex-wrap:wrap;gap:10px;margin-top:8px;"></div><input type="hidden" id="productImage"><small style="color:#888;display:block;margin-top:4px;">Ảnh đầu là ảnh đại diện. Hỗ trợ nhiều ảnh + video.</small></div>
+          <div class="form-group"><label>Phân loại (Size, Màu... giống Shopee)</label><div id="productOptionsEditor"></div><button type="button" class="btn-secondary" id="addOptionBtn" style="margin-top:8px;">+ Thêm phân loại</button></div>
           <div class="form-group"><label>Link video / nhúng — YouTube, TikTok, Facebook, Zalo (mỗi link 1 dòng)</label><textarea id="productVideoLinks" class="form-input" rows="3" placeholder="https://youtube.com/watch?v=...&#10;https://tiktok.com/@user/video/..."></textarea></div>
           <input type="hidden" id="productYoutube">
           <div class="form-group"><label>Thông số kỹ thuật</label>
@@ -472,7 +520,10 @@ function renderProducts() {
     const mEl = document.getElementById('productMember'); if (mEl) mEl.value = '';
     const fEl = document.getElementById('productFeatured'); if (fEl) fEl.checked = false;
     document.getElementById('productImage').value = '';
-    showImagePreview('productPreview', '');
+    productMediaList = [];
+    productOptionsList = [];
+    renderProductMedia();
+    renderProductOptions();
     const vlEl = document.getElementById('productVideoLinks'); if (vlEl) vlEl.value = '';
     const ytEl = document.getElementById('productYoutube'); if (ytEl) ytEl.value = '';
     ['specType','specBrand','specCountry','specSize','specWeight','specMaterial'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
@@ -481,7 +532,23 @@ function renderProducts() {
     document.getElementById('productModal').style.display = 'flex';
   };
   document.getElementById('saveProductBtn').onclick = () => saveProduct(window._editingProductId);
-  setupImageUpload('productUploadBtn', 'productFileInput', 'productPreview', 'productImage', 'products');
+  const _pUp = document.getElementById('productUploadBtn'), _pFile = document.getElementById('productFileInput');
+  if (_pUp && _pFile) {
+    _pUp.onclick = () => _pFile.click();
+    _pFile.onchange = async (e) => {
+      const files = Array.from(e.target.files || []);
+      if (!files.length) return;
+      showToast('Đang tải lên...');
+      for (const file of files) {
+        try { const url = await uploadFile(file, 'products'); productMediaList.push({ url, type: file.type.startsWith('video') ? 'video' : 'image' }); renderProductMedia(); }
+        catch (err) { if (err.message !== 'Unauthorized') showToast('Tải lỗi: ' + file.name, 'error'); }
+      }
+      _pFile.value = '';
+      showToast('Đã tải lên ' + files.length + ' tệp');
+    };
+  }
+  const _addOpt = document.getElementById('addOptionBtn');
+  if (_addOpt) _addOpt.onclick = () => { productOptionsList.push({ name: '', values: [] }); renderProductOptions(); };
   document.getElementById('productSearch')?.addEventListener('keyup', filter);
   document.getElementById('productCatFilter')?.addEventListener('change', filter);
   filter();

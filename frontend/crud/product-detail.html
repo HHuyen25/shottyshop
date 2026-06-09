@@ -832,8 +832,8 @@
       .map(([k, v]) => `<tr><td>${specLabels[k] || k}</td><td>${escapeHtml(String(v))}</td></tr>`).join('');
     document.getElementById('specs-body').innerHTML = specRows || '<tr><td colspan="2" style="color:var(--text-muted);text-align:center">Chưa có thông số</td></tr>';
 
-    // Variants
-    if (p.variants && p.variants.length) renderVariants(p.variants);
+    // Phân loại (options kiểu Shopee: Size, Màu...)
+    renderOptions(p.options);
 
     // Wishlist state
     checkWishlistState();
@@ -874,6 +874,37 @@
     btn.classList.add('active');
   }
 
+  // ── Phân loại (Size, Màu...) từ p.options ──
+  function renderOptions(options) {
+    const section = document.getElementById('variants-section');
+    if (!section) return;
+    if (!options || !options.length) { section.innerHTML = ''; return; }
+    section.innerHTML = options.map(o => `
+      <div style="margin-bottom:12px" data-option-name="${escapeHtml(o.name)}">
+        <div class="variant-label">${escapeHtml(o.name)}</div>
+        <div class="variant-group">
+          ${(o.values || []).map(v => `<button type="button" class="variant-btn" onclick="selectOption(this)" data-value="${escapeHtml(v)}">${escapeHtml(v)}</button>`).join('')}
+        </div>
+      </div>`).join('');
+  }
+  function selectOption(btn) {
+    const group = btn.closest('.variant-group');
+    group.querySelectorAll('.variant-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  }
+  function getSelectedOptions() {
+    const section = document.getElementById('variants-section');
+    const result = {}; let allSelected = true;
+    section.querySelectorAll('[data-option-name]').forEach(g => {
+      const name = g.getAttribute('data-option-name');
+      const active = g.querySelector('.variant-btn.active');
+      if (active) result[name] = active.getAttribute('data-value');
+      else allSelected = false;
+    });
+    return { result, allSelected };
+  }
+  window.selectOption = selectOption;
+
   // ──────────────────────────────────────────────
   // CART & WISHLIST
   // ──────────────────────────────────────────────
@@ -887,6 +918,11 @@
     const token = getToken();
     if (!token) { showToast('Vui lòng đăng nhập để mua hàng', 'error'); return; }
     const qty = parseInt(document.getElementById('qty').value) || 1;
+    const { result: selectedOptions, allSelected } = getSelectedOptions();
+    if (currentProduct && currentProduct.options && currentProduct.options.length && !allSelected) {
+      showToast('Vui lòng chọn đầy đủ phân loại (size, màu...)', 'error');
+      return;
+    }
     try {
       showLoading();
       const res = await fetch(`${API_URL}/cart/add`, {
@@ -896,7 +932,7 @@
       });
       const data = await res.json();
       if (res.ok) {
-        syncLocalCartFromProduct(qty);
+        syncLocalCartFromProduct(qty, selectedOptions);
         updateCartCount();
         showToast('Đã thêm vào giỏ hàng!', 'success');
       }
@@ -905,13 +941,14 @@
     finally { hideLoading(); }
   }
 
-  function syncLocalCartFromProduct(qty) {
+  function syncLocalCartFromProduct(qty, options) {
     if (!currentProduct) return;
     const cart = JSON.parse(localStorage.getItem('shotyCart')) || [];
     const price = currentProduct.salePrice || currentProduct.price || 0;
     const image = currentProduct.image || currentProduct.images?.[0] || '';
-    const existing = cart.find(item => item.id === currentProductId);
-
+    const opts = options || {};
+    // Cùng sản phẩm nhưng khác phân loại (size/màu) = dòng giỏ riêng
+    const existing = cart.find(item => item.id === currentProductId && JSON.stringify(item.options || {}) === JSON.stringify(opts));
     if (existing) {
       existing.quantity += qty;
     } else {
@@ -920,7 +957,8 @@
         name: currentProduct.name,
         price,
         quantity: qty,
-        image
+        image,
+        options: opts
       });
     }
 

@@ -32,6 +32,11 @@ const productSchema = new mongoose.Schema({
     material: { type: String, default: '' },
     brand: { type: String, default: '' }
   },
+  // Phân loại kiểu Shopee: mỗi nhóm có tên + nhiều giá trị. VD: {name:'Size', values:['S','M','L']}
+  options: [{
+    name: { type: String, default: '' },
+    values: [{ type: String }]
+  }],
   featured: { type: Boolean, default: false }, // Sản phẩm nổi bật
   viewCount: { type: Number, default: 0 }, // Lượt xem
   soldCount: { type: Number, default: 0 }, // Số lượng đã bán

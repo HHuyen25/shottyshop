@@ -199,7 +199,8 @@ router.get('/', async (req, res) => {
       const productsWithFullUrls = products.map(product => ({
         ...product,
         image: getFullImageUrl(product.image),
-        images: (product.images || []).map(img => getFullImageUrl(img))
+        images: (product.images || []).map(img => getFullImageUrl(img)),
+        videoLinks: (product.videoLinks || []).map(v => getFullImageUrl(v))
       }));
       
       return {
@@ -245,7 +246,8 @@ router.get('/:id', async (req, res) => {
       return {
         ...found,
         image: getFullImageUrl(found.image),
-        images: (found.images || []).map(img => getFullImageUrl(img))
+        images: (found.images || []).map(img => getFullImageUrl(img)),
+        videoLinks: (found.videoLinks || []).map(v => getFullImageUrl(v))
       };
     }, 15000);
     
@@ -264,7 +266,7 @@ router.get('/:id', async (req, res) => {
 });
 
 // ==================== STAFF/ADMIN: CRUD SẢN PHẨM ====================
-const PRODUCT_FIELDS = ['name','price','salePrice','image','images','category','member','preorder','hanteo','stock','description','youtubeLink','videoLinks','specifications','featured'];
+const PRODUCT_FIELDS = ['name','price','salePrice','image','images','category','member','preorder','hanteo','stock','description','youtubeLink','videoLinks','specifications','featured','options'];
 
 function pickProductFields(body) {
   const data = {};
