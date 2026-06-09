@@ -115,9 +115,20 @@ if (!fs.existsSync(uploadsPath)) {
 app.use('/image', express.static(uploadsPath));
 
 const frontendPath = path.join(__dirname, '..', 'frontend');
+
+// Live-reload (CHỈ dev): theo dõi thay đổi file frontend -> client tự tải lại. Tránh 404 ở local.
+if (!isProduction) {
+  let lastChange = Date.now();
+  try {
+    fs.watch(frontendPath, { recursive: true }, () => { lastChange = Date.now(); });
+    console.log('Live-reload: đang theo dõi frontend/');
+  } catch (e) { console.warn('Live-reload không bật được:', e.message); }
+  app.get('/api/livereload', (req, res) => res.json({ v: lastChange }));
+}
+
 app.use(express.static(frontendPath));
 
-app.get('*', (req, res) => { 
+app.get('*', (req, res) => {
   if (req.path.startsWith('/api/')) return res.status(404).json({ error: 'API endpoint not found' }); 
   const indexPath = path.join(frontendPath, 'index.html'); 
   if (fs.existsSync(indexPath)) res.sendFile(indexPath); 
