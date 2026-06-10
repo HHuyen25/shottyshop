@@ -113,7 +113,7 @@ function renderProducts(category) {
           <div class="category-badge">${escapeHtml(p.category).toUpperCase()}</div>
           <div class="price">${p.preorder ? '<span class="preorder-badge">' + (translations[currentLanguage]?.preorder || 'PRE-ORDER') + '</span>' : ''}${priceDisplay}</div>
           ${p.hanteo ? `<div class="shipping-info">${translations[currentLanguage]?.hanteo || 'HANTEO | Shipped from KR'}</div>` : ''}
-          <button class="add-to-cart" data-id="${p._id}" data-name="${escapeHtml(p.name)}" data-price="${p.price}" data-image="${img}">${translations[currentLanguage]?.add_to_cart || 'ADD TO CART'}</button>
+          <button class="add-to-cart" data-id="${p._id}" data-name="${escapeHtml(p.name)}" data-price="${p.price}" data-image="${img}" data-has-options="${(p.options && p.options.length) ? 1 : 0}">${translations[currentLanguage]?.add_to_cart || 'ADD TO CART'}</button>
         </div>
       </div>
     `;
@@ -149,7 +149,7 @@ function productCardHTML(p) {
         <div class="category-badge">${escapeHtml(p.category).toUpperCase()}</div>
         <div class="price">${p.preorder ? '<span class="preorder-badge">' + (translations[currentLanguage]?.preorder || 'PRE-ORDER') + '</span>' : ''}${priceDisplay}</div>
         ${p.hanteo ? `<div class="shipping-info">${translations[currentLanguage]?.hanteo || 'HANTEO | Shipped from KR'}</div>` : ''}
-        <button class="add-to-cart" data-id="${p._id}" data-name="${escapeHtml(p.name)}" data-price="${p.price}" data-image="${img}">${translations[currentLanguage]?.add_to_cart || 'ADD TO CART'}</button>
+        <button class="add-to-cart" data-id="${p._id}" data-name="${escapeHtml(p.name)}" data-price="${p.price}" data-image="${img}" data-has-options="${(p.options && p.options.length) ? 1 : 0}">${translations[currentLanguage]?.add_to_cart || 'ADD TO CART'}</button>
       </div>
     </div>`;
 }
@@ -181,7 +181,7 @@ function wsCardHTML(p) {
       <div class="ws-name">${escapeHtml(p.name)}</div>
       <div class="ws-price"><span class="cur">${currentCurrency || 'USD'}</span>${convertPrice(p.price)}</div>
       ${tags ? `<div class="ws-tags">${tags}</div>` : ''}
-      <button class="add-to-cart ws-add" data-id="${p._id}" data-name="${escapeHtml(p.name)}" data-price="${p.price}" data-image="${img}">🛒 ${translations[currentLanguage]?.add_to_cart || 'ADD TO CART'}</button>
+      <button class="add-to-cart ws-add" data-id="${p._id}" data-name="${escapeHtml(p.name)}" data-price="${p.price}" data-image="${img}" data-has-options="${(p.options && p.options.length) ? 1 : 0}">🛒 ${translations[currentLanguage]?.add_to_cart || 'ADD TO CART'}</button>
     </div>`;
 }
 
@@ -267,6 +267,12 @@ function applySearchFromURL() {
 }
 
 function addToCart(btn) {
+  // Sản phẩm có phân loại (Size, Màu...) -> sang trang chi tiết để chọn trước
+  if (btn.dataset.hasOptions === '1') {
+    if (typeof toast !== 'undefined' && toast) toast.info ? toast.info('Vui lòng chọn phân loại (size, màu...)') : null;
+    window.location.href = `/crud/product-detail.html?id=${btn.dataset.id}`;
+    return;
+  }
   let cart = JSON.parse(localStorage.getItem('shotyCart')) || [];
   const id = btn.dataset.id, name = btn.dataset.name, price = parseFloat(btn.dataset.price), image = btn.dataset.image;
   let existing = cart.find(i => i.id === id);
