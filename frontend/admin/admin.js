@@ -454,7 +454,7 @@ function renderBanners() {
   document.getElementById('pageContent').innerHTML = `
     <div class="toolbar"><h2>${t('banners')}</h2><button class="btn-primary" id="addBannerBtn">+ ${t('add')}</button></div>
     <div class="banners-grid" id="bannersGrid"></div>
-    <div id="bannerModal" class="modal"><div class="modal-content"><div class="modal-header"><h3 id="bannerModalTitle">${t('add')} ${t('banners')}</h3><span class="close" onclick="closeBannerModal()">&times;</span></div><div class="modal-body"><div class="form-group"><label>${t('title')}</label><input type="text" id="bannerTitle" class="form-input"></div><div class="form-group"><label>${t('subtitle')}</label><input type="text" id="bannerSubtitle" class="form-input"></div><div class="form-group"><label>${t('media_type')}</label><select id="bannerMediaType" class="form-input"><option value="image">Hình ảnh</option><option value="video">Video</option></select></div><div class="form-group"><label>${t('image')}</label><div><button type="button" class="btn-secondary" id="bannerUploadBtn">${t('choose_file')}</button><input type="file" id="bannerFileInput" accept="image/*,video/*" style="display:none"><div id="bannerPreview"></div><input type="text" id="bannerImage" class="form-input" placeholder="Hoặc nhập URL"></div></div><div class="form-group"><label>${t('button_text')}</label><input type="text" id="bannerButtonText" class="form-input" value="SHOP NOW"></div><div class="form-group"><label>${t('button_link')}</label><select id="bannerButtonLink" class="form-input">${productOptions}</select></div><div class="form-group"><label>${t('order')}</label><input type="number" id="bannerOrder" class="form-input" value="0"></div><div class="checkbox-group"><label><input type="checkbox" id="bannerActive" checked> ${t('active')}</label></div></div><div class="modal-footer"><button class="btn-secondary" onclick="closeBannerModal()">${t('cancel')}</button><button class="btn-primary" id="saveBannerBtn">${t('save')}</button></div></div></div>
+    <div id="bannerModal" class="modal"><div class="modal-content"><div class="modal-header"><h3 id="bannerModalTitle">${t('add')} ${t('banners')}</h3><span class="close" onclick="closeBannerModal()">&times;</span></div><div class="modal-body"><div class="form-group"><label>${t('title')}</label><input type="text" id="bannerTitle" class="form-input"></div><div class="form-group"><label>${t('subtitle')}</label><input type="text" id="bannerSubtitle" class="form-input"></div><div class="form-group"><label>${t('media_type')}</label><select id="bannerMediaType" class="form-input"><option value="image">Hình ảnh</option><option value="video">Video</option></select></div><div class="form-group"><label>${t('image')}</label><div><button type="button" class="btn-secondary" id="bannerUploadBtn">${t('choose_file')}</button><input type="file" id="bannerFileInput" accept="image/*,video/*" style="display:none"><div id="bannerPreview"></div><input type="text" id="bannerImage" class="form-input" placeholder="Hoặc nhập URL"></div></div><div class="form-group"><label>${t('button_text')}</label><input type="text" id="bannerButtonText" class="form-input" value="SHOP NOW"></div><div class="form-group"><label>${t('button_link')} (chọn sản phẩm/danh mục)</label><select id="bannerButtonLink" class="form-input">${productOptions}</select></div><div class="form-group"><label>Hoặc nhập URL tùy chỉnh</label><input type="text" id="bannerButtonLinkCustom" class="form-input" placeholder="https://... (để trống nếu đã chọn ở trên)"></div><div class="form-group"><label>${t('order')}</label><input type="number" id="bannerOrder" class="form-input" value="0"></div><div class="checkbox-group"><label><input type="checkbox" id="bannerActive" checked> ${t('active')}</label></div></div><div class="modal-footer"><button class="btn-secondary" onclick="closeBannerModal()">${t('cancel')}</button><button class="btn-primary" id="saveBannerBtn">${t('save')}</button></div></div></div>
   `;
   
   let editingBannerId = null;
@@ -498,7 +498,12 @@ function renderBanners() {
       document.getElementById('bannerImage').value = b.image || '';
       document.getElementById('bannerButtonText').value = b.buttonText || '';
       const linkSelect = document.getElementById('bannerButtonLink');
-      if (linkSelect) linkSelect.value = b.buttonLink || '';
+      const linkCustom = document.getElementById('bannerButtonLinkCustom');
+      if (linkSelect) {
+        linkSelect.value = b.buttonLink || '';
+        // Nếu buttonLink không khớp option nào (URL tùy chỉnh) -> đưa vào ô custom
+        if (linkCustom) linkCustom.value = (b.buttonLink && linkSelect.value !== b.buttonLink) ? b.buttonLink : '';
+      }
       document.getElementById('bannerOrder').value = b.order || 0;
       document.getElementById('bannerActive').checked = b.active !== false;
       const preview = document.getElementById('bannerPreview');
@@ -533,6 +538,8 @@ function renderBanners() {
       document.getElementById('bannerButtonText').value = 'SHOP NOW';
       const linkSelect = document.getElementById('bannerButtonLink');
       if (linkSelect) linkSelect.value = '';
+      const linkCustom = document.getElementById('bannerButtonLinkCustom');
+      if (linkCustom) linkCustom.value = '';
       document.getElementById('bannerOrder').value = '0';
       document.getElementById('bannerActive').checked = true;
       const preview = document.getElementById('bannerPreview');
@@ -550,7 +557,7 @@ function renderBanners() {
         mediaType: document.getElementById('bannerMediaType').value,
         image: document.getElementById('bannerImage').value,
         buttonText: document.getElementById('bannerButtonText').value,
-        buttonLink: document.getElementById('bannerButtonLink').value,
+        buttonLink: (document.getElementById('bannerButtonLinkCustom').value.trim()) || document.getElementById('bannerButtonLink').value,
         order: parseInt(document.getElementById('bannerOrder').value) || 0,
         active: document.getElementById('bannerActive').checked
       };

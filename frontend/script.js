@@ -243,6 +243,17 @@ function renderHomeSections() {
 }
 
 // ==================== SEARCH URL HANDLING ====================
+// Mở trang chủ với ?category=... (vd từ nút banner) -> lọc đúng danh mục
+function applyCategoryFromURL() {
+  const cat = (new URLSearchParams(location.search).get('category') || '').trim();
+  if (!cat) return false;
+  document.querySelectorAll('.category-btn').forEach(b => b.classList.toggle('active', b.dataset.category === cat));
+  renderProducts(cat);
+  const hs = document.getElementById('homeSections'); if (hs) hs.style.display = 'none';
+  document.getElementById('categoryNav')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  return true;
+}
+
 function applySearchFromURL() {
   const term = (new URLSearchParams(location.search).get('search') || '').trim();
   if (!term) return false;
@@ -480,7 +491,7 @@ window.initPage = async () => {
   renderProducts(currentCategory);
   renderSlider();
   renderHomeSections();
-  applySearchFromURL();
+  if (!applySearchFromURL()) applyCategoryFromURL();
   
   await loadWishlistStatus();
   

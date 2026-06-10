@@ -592,8 +592,8 @@ async function saveBanner(editingId) {
     title: document.getElementById('bannerTitle').value.trim(),
     subtitle: document.getElementById('bannerSubtitle').value.trim(),
     image: document.getElementById('bannerImage').value.trim(),
-    linkType: document.getElementById('bannerLinkType').value,
-    linkValue: document.getElementById('bannerLinkValue').value.trim(),
+    buttonText: (document.getElementById('bannerButtonText')?.value.trim()) || 'SHOP NOW',
+    buttonLink: bannerButtonLinkValue(),
     order: parseInt(document.getElementById('bannerOrder').value) || 0,
     active: document.getElementById('bannerActive').checked
   };
@@ -651,8 +651,8 @@ function editBanner(id) {
     document.getElementById('bannerSubtitle').value = b.subtitle || '';
     document.getElementById('bannerImage').value = b.image || '';
     showImagePreview('bannerPreview', b.image);
-    document.getElementById('bannerLinkType').value = b.linkType || 'product';
-    document.getElementById('bannerLinkValue').value = b.linkValue || '';
+    const btEl = document.getElementById('bannerButtonText'); if (btEl) btEl.value = b.buttonText || 'SHOP NOW';
+    setBannerLinkFromUrl(b.buttonLink || '');
     document.getElementById('bannerOrder').value = b.order || 0;
     document.getElementById('bannerActive').checked = b.active !== false;
     window._editingBannerId = b._id;
@@ -665,6 +665,45 @@ function editBanner(id) {
 function closeBannerModal() {
   document.getElementById('bannerModal').style.display = 'none';
   window._editingBannerId = null;
+}
+
+// Đổi loại link -> hiện ô tương ứng (sản phẩm / danh mục / URL)
+function bannerLinkTypeChange() {
+  const ty = document.getElementById('bannerLinkType')?.value;
+  const show = (id, on) => { const el = document.getElementById(id); if (el) el.style.display = on ? '' : 'none'; };
+  show('bannerLinkProductWrap', ty === 'product');
+  show('bannerLinkCategoryWrap', ty === 'category');
+  show('bannerLinkCustomWrap', ty === 'custom');
+}
+window.bannerLinkTypeChange = bannerLinkTypeChange;
+
+// Đổ danh sách TẤT CẢ sản phẩm vào dropdown
+function populateBannerProducts(selectedId) {
+  const sel = document.getElementById('bannerLinkProduct');
+  if (!sel) return;
+  sel.innerHTML = (allProducts || []).map(p => `<option value="${p._id}" ${p._id === selectedId ? 'selected' : ''}>${escapeHtml(p.name)}</option>`).join('') || '<option value="">(chưa có sản phẩm)</option>';
+}
+
+// Tính buttonLink từ lựa chọn
+function bannerButtonLinkValue() {
+  const ty = document.getElementById('bannerLinkType')?.value;
+  if (ty === 'product') { const id = document.getElementById('bannerLinkProduct')?.value; return id ? `/crud/product-detail.html?id=${id}` : '#'; }
+  if (ty === 'category') { return `/?category=${encodeURIComponent(document.getElementById('bannerLinkCategory').value)}`; }
+  return (document.getElementById('bannerLinkCustom')?.value.trim()) || '#';
+}
+
+// Khôi phục lựa chọn từ buttonLink khi sửa
+function setBannerLinkFromUrl(link) {
+  link = link || '';
+  let ty = 'product', pid = '', cat = '', custom = '';
+  if (link.includes('product-detail.html?id=')) { ty = 'product'; pid = (link.split('id=')[1] || '').split('&')[0]; }
+  else if (link.includes('category=')) { ty = 'category'; cat = decodeURIComponent((link.split('category=')[1] || '').split('&')[0]); }
+  else if (link && link !== '#') { ty = 'custom'; custom = link; }
+  const tEl = document.getElementById('bannerLinkType'); if (tEl) tEl.value = ty;
+  populateBannerProducts(pid);
+  if (cat) { const c = document.getElementById('bannerLinkCategory'); if (c) c.value = cat; }
+  const cu = document.getElementById('bannerLinkCustom'); if (cu) cu.value = custom;
+  bannerLinkTypeChange();
 }
 
 function renderBanners() {
@@ -681,8 +720,11 @@ function renderBanners() {
           <div class="form-group"><label>${t('title')}</label><input id="bannerTitle" class="form-input"></div>
           <div class="form-group"><label>${t('subtitle')}</label><input id="bannerSubtitle" class="form-input"></div>
           <div class="form-group"><label>Ảnh hoặc Video (1 tệp)</label><button type="button" class="btn-secondary" id="bannerUploadBtn">Chọn ảnh/video từ máy</button><input type="file" id="bannerFileInput" accept="image/*,video/*" style="display:none"><div id="bannerPreview" style="margin-top:8px;"></div><input type="hidden" id="bannerImage"></div>
-          <div class="form-group"><label>Link Type</label><select id="bannerLinkType" class="form-input"><option value="product">Product</option><option value="category">Category</option><option value="custom">Custom URL</option></select></div>
-          <div class="form-group"><label>Link Value</label><input id="bannerLinkValue" class="form-input" placeholder="Product ID, Category, or URL"></div>
+          <div class="form-group"><label>Chữ trên nút</label><input id="bannerButtonText" class="form-input" placeholder="SHOP NOW" value="SHOP NOW"></div>
+          <div class="form-group"><label>Nút bấm dẫn tới</label><select id="bannerLinkType" class="form-input" onchange="bannerLinkTypeChange()"><option value="product">Sản phẩm</option><option value="category">Danh mục</option><option value="custom">Tùy chỉnh (URL)</option></select></div>
+          <div class="form-group" id="bannerLinkProductWrap"><label>Chọn sản phẩm</label><select id="bannerLinkProduct" class="form-input"></select></div>
+          <div class="form-group" id="bannerLinkCategoryWrap" style="display:none"><label>Chọn danh mục</label><select id="bannerLinkCategory" class="form-input"><option value="Album">Album</option><option value="Card">Card</option><option value="Áo">Áo (Clothing)</option><option value="Sản phẩm liên quan">Sản phẩm liên quan</option></select></div>
+          <div class="form-group" id="bannerLinkCustomWrap" style="display:none"><label>URL tùy chỉnh</label><input id="bannerLinkCustom" class="form-input" placeholder="https://..."></div>
           <div class="form-group"><label>${t('order')}</label><input id="bannerOrder" type="number" class="form-input" value="0"></div>
           <div class="checkbox-group"><label><input type="checkbox" id="bannerActive" checked> ${t('active')}</label></div>
         </div>
@@ -710,14 +752,19 @@ function renderBanners() {
     document.getElementById('bannerSubtitle').value = '';
     document.getElementById('bannerImage').value = '';
     showImagePreview('bannerPreview', '');
+    const btEl = document.getElementById('bannerButtonText'); if (btEl) btEl.value = 'SHOP NOW';
     document.getElementById('bannerLinkType').value = 'product';
-    document.getElementById('bannerLinkValue').value = '';
+    populateBannerProducts('');
+    document.getElementById('bannerLinkCustom').value = '';
+    bannerLinkTypeChange();
     document.getElementById('bannerOrder').value = 0;
     document.getElementById('bannerActive').checked = true;
     document.getElementById('bannerModal').style.display = 'flex';
   };
   document.getElementById('saveBannerBtn').onclick = () => saveBanner(window._editingBannerId);
   setupImageUpload('bannerUploadBtn', 'bannerFileInput', 'bannerPreview', 'bannerImage', 'banners');
+  populateBannerProducts('');
+  bannerLinkTypeChange();
   renderList();
 }
 
