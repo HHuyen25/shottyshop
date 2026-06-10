@@ -821,7 +821,7 @@
     const embedHtml = (typeof renderEmbeds === 'function') ? renderEmbeds(vidUrls) : '';
     if (embedHtml && descEl) {
       descEl.insertAdjacentHTML('afterend',
-        `<div id="product-embeds"><h3 style="font-size:1.1rem;margin:20px 0 8px;">Video & Liên kết</h3>${embedHtml}</div>`);
+        `<div id="product-embeds"><h3 style="font-size:1.1rem;margin:20px 0 8px;">Video hướng dẫn</h3>${embedHtml}</div>`);
     }
 
     // Specs (lọc trường rỗng + nhãn tiếng Việt)
@@ -889,8 +889,11 @@
   }
   function selectOption(btn) {
     const group = btn.closest('.variant-group');
+    const wasActive = btn.classList.contains('active');
+    // Mỗi nhóm chỉ chọn 1 giá trị: bỏ active các nút khác
     group.querySelectorAll('.variant-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
+    // Bấm lại đúng nút đang chọn (lần 2) = BỎ CHỌN
+    if (!wasActive) btn.classList.add('active');
   }
   function getSelectedOptions() {
     const section = document.getElementById('variants-section');
@@ -923,22 +926,18 @@
       showToast('Vui lòng chọn đầy đủ phân loại (size, màu...)', 'error');
       return;
     }
+    // Thêm vào giỏ (localStorage) — nguồn chính của giỏ hàng, LUÔN chạy dù server có lỗi
+    syncLocalCartFromProduct(qty, selectedOptions);
+    updateCartCount();
+    showToast('Đã thêm vào giỏ hàng!', 'success');
+    // Đồng bộ giỏ phía server (best-effort, không chặn — đúng path /carts/add)
     try {
-      showLoading();
-      const res = await fetch(`${API_URL}/cart/add`, {
+      await fetch(`${API_URL}/carts/add`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({ productId: currentProductId, quantity: qty })
       });
-      const data = await res.json();
-      if (res.ok) {
-        syncLocalCartFromProduct(qty, selectedOptions);
-        updateCartCount();
-        showToast('Đã thêm vào giỏ hàng!', 'success');
-      }
-      else showToast(data.error || 'Không thể thêm vào giỏ', 'error');
-    } catch { showToast('Lỗi kết nối', 'error'); }
-    finally { hideLoading(); }
+    } catch (_) {}
   }
 
   function syncLocalCartFromProduct(qty, options) {
