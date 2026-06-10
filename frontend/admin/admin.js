@@ -133,7 +133,7 @@ function logout() {
 async function loadAllData() {
   try {
     const usersRes = await fetchWithAuth(`${API_URL}/users`); allUsers = await usersRes.json();
-    const productsRes = await fetch(`${API_URL}/products`); const productsData = await productsRes.json(); allProducts = productsData.products || [];
+    const productsRes = await fetch(`${API_URL}/products?limit=500`); const productsData = await productsRes.json(); allProducts = productsData.products || [];
     const ordersRes = await fetchWithAuth(`${API_URL}/orders`); const ordersData = await ordersRes.json(); allOrders = ordersData.orders || [];
     const bannersRes = await fetch(`${API_URL}/banners`); allBanners = await bannersRes.json();
     const couponsRes = await fetchWithAuth(`${API_URL}/coupons`); allCoupons = await couponsRes.json();

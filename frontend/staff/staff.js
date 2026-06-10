@@ -195,7 +195,7 @@ async function loadData() {
   showLoading();
   try {
     const [productsRes, ordersRes, bannersRes, couponsRes, postsRes] = await Promise.all([
-      fetch(`${API_URL}/products`),
+      fetch(`${API_URL}/products?limit=500`),
       fetchWithAuth(`${API_URL}/orders`),
       fetch(`${API_URL}/banners`),
       fetchWithAuth(`${API_URL}/coupons`),
