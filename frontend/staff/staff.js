@@ -483,8 +483,8 @@ function renderProducts() {
           <option value="all">All Categories</option>
           <option value="Album">Album</option>
           <option value="Card">Card</option>
-          <option value="Áo">Clothing</option>
-          <option value="Merch">Merch</option>
+          <option value="Áo">Áo (Clothing)</option>
+          <option value="Sản phẩm liên quan">Sản phẩm liên quan</option>
         </select>
         <button id="addProductBtn" class="btn-primary">+ ${t('add')}</button>
       </div>
@@ -509,7 +509,7 @@ function renderProducts() {
             <div class="form-group"><label>${t('stock')}</label><input id="productStock" type="number" class="form-input" value="10"></div>
           </div>
           <div class="form-row-2">
-            <div class="form-group"><label>${t('category')}</label><select id="productCategory" class="form-input"><option value="Album">Album</option><option value="Card">Card</option><option value="Áo">Clothing</option><option value="Poster">Poster</option><option value="Photobook">Photobook</option></select></div>
+            <div class="form-group"><label>${t('category')}</label><select id="productCategory" class="form-input"><option value="Album">Album</option><option value="Card">Card</option><option value="Áo">Áo (Clothing)</option><option value="Sản phẩm liên quan">Sản phẩm liên quan</option></select></div>
             <div class="form-group"><label>Thành viên</label><select id="productMember" class="form-input"><option value="">— Không / Nhóm —</option><option value="OHYUL">OHYUL</option><option value="RYUL">RYUL</option><option value="WOOJIN">WOOJIN</option><option value="LOUIS">LOUIS</option><option value="GROUP">GROUP (cả nhóm)</option></select></div>
           </div>
           <div class="form-group"><label>Ảnh & Video (có thể chọn nhiều)</label><button type="button" class="btn-secondary" id="productUploadBtn">+ Thêm ảnh/video</button><input type="file" id="productFileInput" accept="image/*,video/*" multiple style="display:none"><div id="productMediaPreview" style="display:flex;flex-wrap:wrap;gap:10px;margin-top:8px;"></div><input type="hidden" id="productImage"><small style="color:#888;display:block;margin-top:4px;">Ảnh đầu là ảnh đại diện. Hỗ trợ nhiều ảnh + video.</small></div>
