@@ -28,6 +28,30 @@
     .ws-add { width: 100%; margin-top: .7rem; padding: .6rem .8rem; background: #0a0a0a; color: #fff; border: 1px solid #0a0a0a; border-radius: 10px; font-size: .82rem; font-weight: 700; cursor: pointer; transition: background .15s, transform .1s; }
     .ws-add:hover { background: #fff; color: #0a0a0a; }
     .ws-add:active { transform: scale(.97); }
+    /* Hộp thoại chọn phân loại + số lượng */
+    .vm-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.55); display: none; align-items: center; justify-content: center; z-index: 9999; padding: 1rem; }
+    .vm-overlay.show { display: flex; }
+    .vm-box { background: #fff; border-radius: 16px; max-width: 430px; width: 100%; padding: 1.6rem; position: relative; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,.3); }
+    .vm-close { position: absolute; top: 8px; right: 14px; background: none; border: none; font-size: 1.7rem; line-height: 1; cursor: pointer; color: #999; }
+    .vm-close:hover { color: #111; }
+    .vm-head { display: flex; gap: 14px; align-items: center; margin-bottom: 1.3rem; padding-right: 1.5rem; }
+    .vm-img { width: 84px; height: 84px; object-fit: cover; border-radius: 12px; border: 1px solid #eee; flex-shrink: 0; }
+    .vm-name { font-weight: 700; font-size: 1rem; color: #111; line-height: 1.35; }
+    .vm-price { font-weight: 800; font-size: 1.15rem; color: #0a0a0a; margin-top: 5px; }
+    .vm-opt-row { display: flex; align-items: center; gap: 12px; margin-bottom: 13px; flex-wrap: wrap; }
+    .vm-opt-name { min-width: 60px; font-size: .78rem; font-weight: 700; text-transform: uppercase; letter-spacing: .4px; color: #888; }
+    .vm-opt-vals { display: flex; gap: 8px; flex-wrap: wrap; flex: 1; }
+    .vm-val { padding: 7px 16px; border: 1.5px solid #ddd; background: #fafafa; border-radius: 8px; cursor: pointer; font-size: .88rem; font-family: inherit; transition: all .15s; }
+    .vm-val:hover { border-color: #0a0a0a; }
+    .vm-val.active { border-color: #0a0a0a; background: #0a0a0a; color: #fff; }
+    .vm-qty-row { display: flex; align-items: center; justify-content: space-between; margin: 1.3rem 0; }
+    .vm-qty-label { font-weight: 600; color: #555; }
+    .vm-qty { display: flex; align-items: center; border: 1.5px solid #ddd; border-radius: 9px; overflow: hidden; }
+    .vm-qty button { width: 38px; height: 38px; border: none; background: #f4f4f5; cursor: pointer; font-size: 1.15rem; line-height: 1; }
+    .vm-qty button:hover { background: #e7e7e9; }
+    .vm-qty span { min-width: 46px; text-align: center; font-weight: 700; }
+    .vm-add { width: 100%; padding: .9rem; background: #0a0a0a; color: #fff; border: 1.5px solid #0a0a0a; border-radius: 10px; font-weight: 700; font-size: .95rem; cursor: pointer; transition: background .15s, color .15s; }
+    .vm-add:hover { background: #fff; color: #0a0a0a; }
     .ws-tag { font-size: .62rem; font-weight: 700; padding: 2px 7px; border-radius: 5px; border: 1px solid; letter-spacing: .3px; }
     .tag-exclusive { color: #06b6d4; border-color: #06b6d4; }
     .tag-preorder { color: #7c4dff; border-color: #7c4dff; }
