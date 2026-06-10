@@ -322,7 +322,8 @@ function hideLoading() {
 window.loadProducts = async function() {
   try {
     showLoading();
-    const res = await fetch(`${API_URL}/products`);
+    // Lọc danh mục làm ở client -> phải tải HẾT sản phẩm (không để limit mặc định 20 cắt bớt)
+    const res = await fetch(`${API_URL}/products?limit=500`);
     const data = await res.json();
     window.products = data.products || [];
     products = window.products;
