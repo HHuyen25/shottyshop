@@ -196,22 +196,13 @@ router.post('/', verifyToken, async (req, res) => {
     });
     
     await order.save();
-    
-    // Gửi email xác nhận (nếu có cấu hình)
-    try {
-      await sendOrderConfirmation(order, finalCustomerEmail);
-    } catch(emailErr) {
-      console.error('Email error:', emailErr);
-    }
-    
-    // Tạo thông báo cho user
-    try {
-      await createNotification(req.user.id, 'order', '🛒 Đơn hàng mới', `Đơn hàng #${order.orderId} đã được tạo thành công`, { orderId: order._id });
-    } catch(notifErr) {
-      console.error('Notification error:', notifErr);
-    }
-    
+
+    // Trả response NGAY khi đã lưu đơn -> thanh toán nhanh, không bắt người dùng chờ email
     res.status(201).json(order);
+
+    // Gửi email xác nhận + thông báo CHẠY NỀN (không chặn response, SMTP có thể mất vài giây)
+    sendOrderConfirmation(order, finalCustomerEmail).catch(emailErr => console.error('Email error:', emailErr.message));
+    createNotification(req.user.id, 'order', '🛒 Đơn hàng mới', `Đơn hàng #${order.orderId} đã được tạo thành công`, { orderId: order._id }).catch(notifErr => console.error('Notification error:', notifErr.message));
   } catch (err) {
     console.error('Order creation error:', err);
     res.status(500).json({ error: err.message });
