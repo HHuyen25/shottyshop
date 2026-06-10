@@ -97,7 +97,8 @@
         showLoading();
         const wishlist = await wishlistAPI.get();
         renderWishlist(wishlist.items);
-        document.getElementById('wishlistCount').textContent = wishlist.items.length;
+        const wcEl = document.getElementById('wishlistCount');
+        if (wcEl) wcEl.textContent = (wishlist.items || []).length;
         hideLoading();
       } catch(e) {
         console.error(e);
@@ -187,7 +188,8 @@
             const itemDiv = document.querySelector(`.wishlist-item[data-id="${btn.dataset.id}"]`);
             if (itemDiv) itemDiv.remove();
             const remaining = document.querySelectorAll('.wishlist-item').length;
-            document.getElementById('wishlistCount').textContent = remaining;
+            const wcEl2 = document.getElementById('wishlistCount');
+            if (wcEl2) wcEl2.textContent = remaining;
             if (remaining === 0) {
               document.getElementById('wishlistItems').style.display = 'none';
               document.getElementById('emptyWishlist').style.display = 'block';
