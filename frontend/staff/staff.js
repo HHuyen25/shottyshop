@@ -484,8 +484,7 @@ function renderProducts() {
           <option value="Album">Album</option>
           <option value="Card">Card</option>
           <option value="Áo">Clothing</option>
-          <option value="Poster">Poster</option>
-          <option value="Photobook">Photobook</option>
+          <option value="Merch">Merch</option>
         </select>
         <button id="addProductBtn" class="btn-primary">+ ${t('add')}</button>
       </div>
