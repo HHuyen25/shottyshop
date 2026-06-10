@@ -172,6 +172,11 @@
       border-color: var(--accent); background: var(--accent-light); color: var(--accent);
     }
     .variant-btn.disabled { opacity: .4; cursor: not-allowed; text-decoration: line-through; }
+    /* Mỗi phân loại 1 hàng: tên bên trái, giá trị nằm ngang bên phải */
+    .variant-row { display: flex; align-items: center; gap: 14px; margin-bottom: 14px; flex-wrap: wrap; }
+    .variant-row .variant-label { margin-bottom: 0; min-width: 60px; flex-shrink: 0; }
+    .variant-row .variant-group { flex: 1; }
+    @media (max-width: 520px) { .variant-row { align-items: flex-start; } }
 
     /* Qty + Cart */
     .qty-row { display: flex; align-items: center; gap: 12px; }
@@ -879,11 +884,20 @@
     const section = document.getElementById('variants-section');
     if (!section) return;
     if (!options || !options.length) { section.innerHTML = ''; return; }
-    section.innerHTML = options.map(o => `
-      <div style="margin-bottom:12px" data-option-name="${escapeHtml(o.name)}">
-        <div class="variant-label">${escapeHtml(o.name)}</div>
+    // Gộp các nhóm TRÙNG TÊN thành 1 tên duy nhất, gộp + loại trùng giá trị
+    const merged = {}; const order = [];
+    options.forEach(o => {
+      const name = (o.name || '').trim();
+      if (!name) return;
+      if (!merged[name]) { merged[name] = []; order.push(name); }
+      (o.values || []).forEach(v => { v = (v || '').trim(); if (v && !merged[name].includes(v)) merged[name].push(v); });
+    });
+    // Mỗi tên 1 hàng: [Tên]  [giá trị][giá trị]... nằm ngang
+    section.innerHTML = order.map(name => `
+      <div class="variant-row" data-option-name="${escapeHtml(name)}">
+        <div class="variant-label">${escapeHtml(name)}</div>
         <div class="variant-group">
-          ${(o.values || []).map(v => `<button type="button" class="variant-btn" onclick="selectOption(this)" data-value="${escapeHtml(v)}">${escapeHtml(v)}</button>`).join('')}
+          ${merged[name].map(v => `<button type="button" class="variant-btn" onclick="selectOption(this)" data-value="${escapeHtml(v)}">${escapeHtml(v)}</button>`).join('')}
         </div>
       </div>`).join('');
   }
