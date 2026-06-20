@@ -110,12 +110,12 @@
   <script>
     let orders = [];
 
-    async function loadOrders() {
+    async function loadOrders(silent) {
       const authenticated = await ensureAuthenticated(true);
       if (!authenticated) return;
 
       try {
-        showLoading();
+        if (!silent) showLoading();
         const res = await fetch(`${API_URL}/orders/user/${currentUser._id}`, {
           headers: { 'Authorization': `Bearer ${authToken}` }
         });
@@ -128,10 +128,10 @@
         }
         orders = await res.json();
         renderOrders();
-        hideLoading();
+        if (!silent) hideLoading();
       } catch(e) {
         console.error(e);
-        hideLoading();
+        if (!silent) hideLoading();
         document.getElementById('ordersList').innerHTML = '<div class="empty-orders">Failed to load orders. Please try again later.</div>';
         if (window.toast) toast.error(translations[currentLanguage]?.error || 'Failed to load orders');
       }
@@ -255,6 +255,7 @@
     window.initPage = async () => {
       if (!(await (window.requireLogin ? window.requireLogin() : Promise.resolve(true)))) return;
       await loadOrders();
+      if (window.registerAutoRefresh) window.registerAutoRefresh(() => loadOrders(true));
     };
   </script>
 </body>

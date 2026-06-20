@@ -1018,6 +1018,31 @@ if (darkModeToggle) {
 }
 
 checkAdmin();
+
+// ==================== TỰ ĐỘNG CẬP NHẬT (không cần tải lại trang) ====================
+// Làm mới dữ liệu (sản phẩm, đơn hàng, người dùng...) khi quay lại tab / focus / định kỳ 30s.
+(function autoRefreshAdmin(){
+  function shouldSkip(){
+    if (document.hidden) return true;
+    const ae = document.activeElement;
+    if (ae && /^(INPUT|TEXTAREA|SELECT)$/.test(ae.tagName)) return true;
+    // Đang mở modal (thêm/sửa) -> không làm phiền
+    const modals = document.querySelectorAll('.modal, [id$="Modal"]');
+    for (const m of modals) { const d = getComputedStyle(m).display; if (d && d !== 'none') return true; }
+    return false;
+  }
+  let running = false;
+  async function refresh(){
+    if (running || shouldSkip() || !currentUser) return;
+    running = true;
+    try { await loadAllData(); showPage(currentPage); } catch(e){ console.error('autoRefresh:', e); }
+    running = false;
+  }
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) refresh(); });
+  window.addEventListener('focus', refresh);
+  setInterval(refresh, 30000);
+})();
+
 // ==================== LIVE RELOAD (dev) — tự tải lại khi file thay đổi ====================
 (function liveReload(){
   if (!/^(localhost|127\.0\.0\.1)$/.test(location.hostname)) return; // chỉ chạy ở dev

@@ -90,19 +90,19 @@
       }
     };
 
-    async function loadWishlist() {
+    async function loadWishlist(silent) {
       const authenticated = await ensureAuthenticated(true);
       if (!authenticated) return;
       try {
-        showLoading();
+        if (!silent) showLoading();
         const wishlist = await wishlistAPI.get();
         renderWishlist(wishlist.items);
         const wcEl = document.getElementById('wishlistCount');
         if (wcEl) wcEl.textContent = (wishlist.items || []).length;
-        hideLoading();
+        if (!silent) hideLoading();
       } catch(e) {
         console.error(e);
-        hideLoading();
+        if (!silent) hideLoading();
         if (e.message !== 'Unauthorized') {
           if (window.toast) toast.error(translations[currentLanguage]?.error || 'Failed to load wishlist');
           document.getElementById('wishlistItems').innerHTML = '<div class="empty-wishlist">Failed to load wishlist. Please try again later.</div>';
@@ -212,7 +212,7 @@
 
     window.onCurrencyChange = () => { loadWishlist(); };
     window.onLanguageChange = () => { loadWishlist(); };
-    window.initPage = async () => { if (!(await (window.requireLogin ? window.requireLogin() : Promise.resolve(true)))) return; await loadWishlist(); };
+    window.initPage = async () => { if (!(await (window.requireLogin ? window.requireLogin() : Promise.resolve(true)))) return; await loadWishlist(); if (window.registerAutoRefresh) window.registerAutoRefresh(() => loadWishlist(true)); };
   </script>
 </body>
 </html>

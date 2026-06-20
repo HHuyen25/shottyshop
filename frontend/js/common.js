@@ -319,18 +319,18 @@ function hideLoading() {
 }
 
 // ==================== HÀM LOAD PRODUCTS (GLOBAL) ====================
-window.loadProducts = async function() {
+window.loadProducts = async function(silent) {
   try {
-    showLoading();
+    if (!silent) showLoading();
     // Lọc danh mục làm ở client -> phải tải HẾT sản phẩm (không để limit mặc định 20 cắt bớt)
     const res = await fetch(`${API_URL}/products?limit=500`);
     const data = await res.json();
     window.products = data.products || [];
     products = window.products;
-    hideLoading();
+    if (!silent) hideLoading();
     return products;
   } catch(e) {
-    hideLoading();
+    if (!silent) hideLoading();
     console.error('Load products error:', e);
     if (window.toast) toast.error('Failed to load products');
     return [];
@@ -758,6 +758,41 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 // Tự động làm mới thông báo mỗi 60 giây
 setInterval(() => { if (currentUser) loadNotifications(); }, 60000);
+
+// ==================== TỰ ĐỘNG CẬP NHẬT (không cần tải lại trang) ====================
+// Mỗi trang gọi registerAutoRefresh(fn) để đăng ký hàm tải lại dữ liệu của trang đó.
+// Engine sẽ tự gọi lại các hàm này khi: quay lại tab, cửa sổ được focus, và định kỳ mỗi 30s.
+(function setupAutoRefresh(){
+  const refreshers = [];
+  window.registerAutoRefresh = function(fn){ if (typeof fn === 'function' && !refreshers.includes(fn)) refreshers.push(fn); };
+
+  // Bỏ qua làm mới khi đang gây phiền: tab ẩn, đang nhập liệu, hoặc đang mở popup/modal
+  window.autoRefreshShouldSkip = function(){
+    if (document.hidden) return true;
+    const ae = document.activeElement;
+    if (ae && /^(INPUT|TEXTAREA|SELECT)$/.test(ae.tagName)) return true;
+    const modals = document.querySelectorAll('.modal, [id$="Modal"]');
+    for (const m of modals) {
+      const d = getComputedStyle(m).display;
+      if (d && d !== 'none') return true;
+    }
+    return false;
+  };
+
+  let running = false;
+  async function runAll(force){
+    if (running) return;
+    if (!force && window.autoRefreshShouldSkip()) return;
+    running = true;
+    for (const fn of refreshers) { try { await fn(); } catch(e){ console.error('autoRefresh:', e); } }
+    running = false;
+  }
+  window.triggerAutoRefresh = () => runAll(true); // gọi thủ công sau khi thực hiện 1 hành động
+
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) runAll(); });
+  window.addEventListener('focus', () => runAll());
+  setInterval(() => runAll(), 30000);
+})();
 
 // ==================== FIXED HEADER + STICKY MENU ====================
 function adjustFixedHeader() {

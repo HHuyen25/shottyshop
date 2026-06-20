@@ -519,6 +519,20 @@ window.initPage = async () => {
     sliderContainer.addEventListener('mouseleave', startAutoSlide);
   }
   setupModalHandlers();
+
+  // Tự cập nhật danh sách sản phẩm/banner mà không cần tải lại trang
+  if (window.registerAutoRefresh) {
+    window.registerAutoRefresh(async () => {
+      await Promise.all([
+        window.loadProducts ? window.loadProducts(true) : Promise.resolve(),
+        window.loadBanners ? window.loadBanners() : Promise.resolve()
+      ]);
+      const cat = document.querySelector('.category-btn.active')?.dataset.category || 'all';
+      renderProducts(cat);
+      renderHomeSections();
+      if (currentUser) await loadWishlistStatus();
+    });
+  }
 };
 
 // ==================== AUTH MODAL HANDLERS ====================
