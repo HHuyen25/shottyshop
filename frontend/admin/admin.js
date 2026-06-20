@@ -910,7 +910,7 @@ function renderReports() {
     cancelled: allOrders.filter(o=>o.status==='cancelled').length
   };
   document.getElementById('pageContent').innerHTML = `
-    <div class="toolbar"><h2>${t('reports')}</h2><div><button id="exportReportExcelBtn" class="btn-secondary">Export Excel</button><button id="exportReportPDFBtn" class="btn-secondary">Export PDF</button></div></div>
+    <div class="toolbar"><h2>${t('reports')}</h2><div><button id="exportReportPreviewBtn" class="btn-secondary">👁 Xem trước & Xuất file</button></div></div>
     <div class="stats-grid" style="margin-bottom:24px;">
       <div class="stat-card"><div class="stat-icon"></div><div><div class="stat-value">${convertPrice(totalRevenue)}</div><div class="stat-label">Tổng doanh thu</div></div></div>
       <div class="stat-card"><div class="stat-icon"></div><div><div class="stat-value">${totalOrders}</div><div class="stat-label">Tổng đơn hàng</div></div></div>
@@ -942,22 +942,65 @@ function renderReports() {
       options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
     });
   }
-  document.getElementById('exportReportExcelBtn')?.addEventListener('click', () => {
-    if (typeof XLSX !== 'undefined') {
-      const wsData = [['Mã đơn','Khách hàng','Email','Tổng','Trạng thái','Ngày']];
-      allOrders.forEach(o => wsData.push([o.orderId||o._id, o.customerName, o.customerEmail, o.total, o.status, new Date(o.date).toLocaleDateString()]));
-      const ws = XLSX.utils.aoa_to_sheet(wsData);
-      const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, 'Orders_Report');
-      XLSX.writeFile(wb, `orders_report_${new Date().toISOString().slice(0,10)}.xlsx`);
-    } else alert('Excel library not loaded');
-  });
-  document.getElementById('exportReportPDFBtn')?.addEventListener('click', () => {
-    if (typeof html2pdf !== 'undefined') {
-      const element = document.getElementById('pageContent');
-      html2pdf().from(element).set({ margin: 0.5, filename: `report_${new Date().toISOString().slice(0,10)}.pdf`, html2canvas: { scale: 2 }, jsPDF: { unit: 'in', format: 'a4', orientation: 'landscape' } }).save();
-    } else alert('PDF library not loaded');
-  });
+  document.getElementById('exportReportPreviewBtn')?.addEventListener('click', openExportPreview);
+}
+
+// ========== XEM TRƯỚC & XUẤT BÁO CÁO ĐƠN HÀNG ==========
+function buildOrdersExportData() {
+  const header = ['Mã đơn', 'Khách hàng', 'Email', 'Tổng (USD)', 'Trạng thái', 'Ngày'];
+  const rows = allOrders.map(o => [o.orderId || o._id, o.customerName || '', o.customerEmail || '', o.total || 0, t(o.status) || o.status, new Date(o.date).toLocaleDateString()]);
+  return { header, rows };
+}
+
+function openExportPreview() {
+  const { header, rows } = buildOrdersExportData();
+  let modal = document.getElementById('exportPreviewModal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'exportPreviewModal';
+    modal.className = 'modal';
+    modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;justify-content:center;align-items:center;z-index:10000;';
+    document.body.appendChild(modal);
+  }
+  const tableHtml = `<table style="width:100%;border-collapse:collapse;font-size:.9rem;">
+      <thead><tr>${header.map(h => `<th style="border:1px solid #ddd;padding:8px;text-align:left;background:#f5f5f5;position:sticky;top:0;">${h}</th>`).join('')}</tr></thead>
+      <tbody>${rows.length ? rows.map(r => `<tr>${r.map((c, i) => `<td style="border:1px solid #eee;padding:8px;">${i === 3 ? convertPrice(c) : escapeHtml(String(c))}</td>`).join('')}</tr>`).join('') : `<tr><td colspan="${header.length}" style="padding:20px;text-align:center;color:#888;">Chưa có dữ liệu</td></tr>`}</tbody>
+    </table>`;
+  modal.innerHTML = `<div style="background:#fff;border-radius:14px;max-width:920px;width:92%;max-height:86vh;display:flex;flex-direction:column;overflow:hidden;">
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border-bottom:1px solid #eee;">
+        <h3 style="margin:0;">Xem trước báo cáo đơn hàng (${rows.length})</h3>
+        <button id="exportPreviewClose" style="background:none;border:none;font-size:24px;cursor:pointer;line-height:1;">&times;</button>
+      </div>
+      <div id="exportPreviewContent" style="padding:16px 20px;overflow:auto;">${tableHtml}</div>
+      <div style="display:flex;gap:10px;justify-content:flex-end;padding:16px 20px;border-top:1px solid #eee;flex-wrap:wrap;">
+        <button id="exportPreviewCancel" class="btn-secondary">Đóng</button>
+        <button id="exportDoExcel" class="btn-primary">⬇ Tải Excel</button>
+        <button id="exportDoPDF" class="btn-primary">⬇ Tải PDF</button>
+      </div>
+    </div>`;
+  modal.style.display = 'flex';
+  const close = () => { modal.style.display = 'none'; };
+  modal.querySelector('#exportPreviewClose').onclick = close;
+  modal.querySelector('#exportPreviewCancel').onclick = close;
+  modal.onclick = (e) => { if (e.target === modal) close(); };
+  modal.querySelector('#exportDoExcel').onclick = () => exportOrdersExcel(header, rows);
+  modal.querySelector('#exportDoPDF').onclick = exportOrdersPDF;
+}
+
+function exportOrdersExcel(header, rows) {
+  if (typeof XLSX === 'undefined') return alert('Excel library not loaded');
+  const ws = XLSX.utils.aoa_to_sheet([header, ...rows]);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Orders_Report');
+  XLSX.writeFile(wb, `orders_report_${new Date().toISOString().slice(0, 10)}.xlsx`);
+  showToast('Đã tải file Excel', 'success');
+}
+
+function exportOrdersPDF() {
+  if (typeof html2pdf === 'undefined') return alert('PDF library not loaded');
+  const element = document.getElementById('exportPreviewContent');
+  html2pdf().from(element).set({ margin: 0.5, filename: `orders_report_${new Date().toISOString().slice(0, 10)}.pdf`, html2canvas: { scale: 2 }, jsPDF: { unit: 'in', format: 'a4', orientation: 'landscape' } }).save();
+  showToast('Đang tạo file PDF...', 'success');
 }
 
 // ========== AUTH CHECK ==========

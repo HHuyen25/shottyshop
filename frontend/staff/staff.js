@@ -1161,7 +1161,7 @@ function renderReports() {
     catRevenue[cat] = (catRevenue[cat] || 0) + item.price * item.quantity;
   }));
   document.getElementById('pageContent').innerHTML = `
-    <div class="toolbar"><h2>Reports</h2><div><button id="exportCsvBtn" class="btn-secondary">Export CSV</button></div></div>
+    <div class="toolbar"><h2>Reports</h2><div><button id="exportPreviewBtn" class="btn-secondary">👁 Xem trước & Xuất file</button></div></div>
     <div class="stats-grid" style="grid-template-columns:repeat(3,1fr)">
       <div class="stat-card"><div><div class="stat-value">${convertPrice(totalRevenue)}</div><div class="stat-label">Total Revenue</div></div></div>
       <div class="stat-card"><div><div class="stat-value">${convertPrice(deliveredRevenue)}</div><div class="stat-label">Delivered Revenue</div></div></div>
@@ -1170,16 +1170,69 @@ function renderReports() {
     <div class="section-card"><div class="card-header"><h3>Revenue by Category</h3></div><div class="category-list">${Object.entries(catRevenue).length === 0 ? '<div class="empty-message">No data</div>' : Object.entries(catRevenue).sort((a, b) => b[1] - a[1]).map(([cat, rev]) => `<div class="category-item"><span>${cat}</span><div class="progress-bar"><div class="progress-fill" style="width: ${Math.min(100, Math.round(rev / Math.max(...Object.values(catRevenue)) * 100))}%"></div></div><span>${convertPrice(rev)}</span></div>`).join('')}</div></div>
     <div class="section-card"><div class="card-header"><h3>Order List</h3></div><div class="table-responsive"><table class="data-table"><thead><tr><th>Order ID</th><th>Customer</th><th>Total</th><th>Status</th><th>Date</th></tr></thead><tbody>${allOrders.map(o => `<tr><td><strong>${o.orderId || o._id.slice(-8)}</strong></td><td>${escapeHtml(o.customerName)}</td><td>${convertPrice(o.total)}</td><td><span class="status-badge status-${o.status}">${t(o.status)}</span></td><td>${new Date(o.date).toLocaleDateString()}</td></tr>`).join('') || '<tr><td colspan="5" class="empty-message">No orders</td></tr>'}</tbody></table></div></div>
   `;
-  document.getElementById('exportCsvBtn')?.addEventListener('click', () => {
-    const rows = [['Order ID', 'Customer', 'Email', 'Total', 'Status', 'Date'], ...allOrders.map(o => [o.orderId || o._id, o.customerName, o.customerEmail, o.total, o.status, new Date(o.date).toLocaleDateString()])];
-    const csv = rows.map(r => r.map(v => `"${v}"`).join(',')).join('\n');
-    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv' });
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = `orders_${new Date().toISOString().slice(0, 10)}.csv`;
-    a.click();
-    showToast('CSV exported');
-  });
+  document.getElementById('exportPreviewBtn')?.addEventListener('click', openExportPreview);
+}
+
+// ========== XEM TR\u01AF\u1EDAC & XU\u1EA4T B\u00C1O C\u00C1O \u0110\u01A0N H\u00C0NG ==========
+function buildOrdersExportData() {
+  const header = ['Order ID', 'Customer', 'Email', 'Total (USD)', 'Status', 'Date'];
+  const rows = allOrders.map(o => [o.orderId || o._id, o.customerName || '', o.customerEmail || '', o.total || 0, t(o.status) || o.status, new Date(o.date).toLocaleDateString()]);
+  return { header, rows };
+}
+
+function openExportPreview() {
+  const { header, rows } = buildOrdersExportData();
+  let modal = document.getElementById('exportPreviewModal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'exportPreviewModal';
+    modal.className = 'modal';
+    modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;justify-content:center;align-items:center;z-index:10000;';
+    document.body.appendChild(modal);
+  }
+  const tableHtml = `<table style="width:100%;border-collapse:collapse;font-size:.9rem;">
+      <thead><tr>${header.map(h => `<th style="border:1px solid #ddd;padding:8px;text-align:left;background:#f5f5f5;position:sticky;top:0;">${h}</th>`).join('')}</tr></thead>
+      <tbody>${rows.length ? rows.map(r => `<tr>${r.map((c, i) => `<td style="border:1px solid #eee;padding:8px;">${i === 3 ? convertPrice(c) : escapeHtml(String(c))}</td>`).join('')}</tr>`).join('') : `<tr><td colspan="${header.length}" style="padding:20px;text-align:center;color:#888;">No data</td></tr>`}</tbody>
+    </table>`;
+  modal.innerHTML = `<div style="background:#fff;border-radius:14px;max-width:920px;width:92%;max-height:86vh;display:flex;flex-direction:column;overflow:hidden;">
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border-bottom:1px solid #eee;">
+        <h3 style="margin:0;">Preview orders report (${rows.length})</h3>
+        <button id="exportPreviewClose" style="background:none;border:none;font-size:24px;cursor:pointer;line-height:1;">&times;</button>
+      </div>
+      <div id="exportPreviewContent" style="padding:16px 20px;overflow:auto;">${tableHtml}</div>
+      <div style="display:flex;gap:10px;justify-content:flex-end;padding:16px 20px;border-top:1px solid #eee;flex-wrap:wrap;">
+        <button id="exportPreviewCancel" class="btn-secondary">\u0110\u00F3ng</button>
+        <button id="exportDoCsv" class="btn-primary">\u2B07 T\u1EA3i CSV</button>
+        <button id="exportDoExcel" class="btn-primary">\u2B07 T\u1EA3i Excel</button>
+      </div>
+    </div>`;
+  modal.style.display = 'flex';
+  const close = () => { modal.style.display = 'none'; };
+  modal.querySelector('#exportPreviewClose').onclick = close;
+  modal.querySelector('#exportPreviewCancel').onclick = close;
+  modal.onclick = (e) => { if (e.target === modal) close(); };
+  modal.querySelector('#exportDoCsv').onclick = () => exportOrdersCsv(header, rows);
+  modal.querySelector('#exportDoExcel').onclick = () => exportOrdersExcel(header, rows);
+}
+
+function exportOrdersCsv(header, rows) {
+  const data = [header, ...rows];
+  const csv = data.map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n');
+  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `orders_${new Date().toISOString().slice(0, 10)}.csv`;
+  a.click();
+  showToast('\u0110\u00E3 t\u1EA3i file CSV');
+}
+
+function exportOrdersExcel(header, rows) {
+  if (typeof XLSX === 'undefined') return showToast('Excel library not loaded', 'error');
+  const ws = XLSX.utils.aoa_to_sheet([header, ...rows]);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Orders_Report');
+  XLSX.writeFile(wb, `orders_${new Date().toISOString().slice(0, 10)}.xlsx`);
+  showToast('\u0110\u00E3 t\u1EA3i file Excel');
 }
 
 // ========== PAGE NAVIGATION ==========
