@@ -567,6 +567,7 @@ function setupLanguageAndCurrency() {
         localStorage.setItem('preferredLanguage', currentLanguage);
         translatePage();
         updateLangButton();
+        if (typeof renderCartModal === 'function') renderCartModal();
         if (typeof window.onLanguageChange === 'function') window.onLanguageChange();
         window.toast?.success(`Language changed to ${currentLanguage.toUpperCase()}`);
       });
@@ -581,6 +582,7 @@ function setupLanguageAndCurrency() {
         currentCurrency = link.dataset.currency;
         localStorage.setItem('preferredCurrency', currentCurrency);
         updateCurrencyButton();
+        if (typeof renderCartModal === 'function') renderCartModal();
         if (typeof window.onCurrencyChange === 'function') window.onCurrencyChange();
         window.toast?.success(`Currency changed to ${currentCurrency}`);
       });

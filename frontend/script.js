@@ -535,6 +535,16 @@ window.initPage = async () => {
   }
 };
 
+// ==================== CẬP NHẬT NGAY KHI ĐỔI NGÔN NGỮ / TỶ GIÁ ====================
+// Re-render lại sản phẩm để giá đổi theo tỷ giá và chữ đổi theo ngôn ngữ — không cần tải lại trang
+function rerenderHomeForLocale() {
+  const cat = document.querySelector('.category-btn.active')?.dataset.category || 'all';
+  if (typeof renderProducts === 'function') renderProducts(cat);
+  if (typeof renderHomeSections === 'function') renderHomeSections();
+}
+window.onLanguageChange = rerenderHomeForLocale;
+window.onCurrencyChange = rerenderHomeForLocale;
+
 // ==================== AUTH MODAL HANDLERS ====================
 function openLoginModal() { const m = document.getElementById('loginModal'); if(m) m.style.display='flex'; }
 function closeLoginModal() { const m = document.getElementById('loginModal'); if(m) m.style.display='none'; }
